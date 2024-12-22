@@ -1,0 +1,5 @@
+*.dll
+.vscode
+src/include/*
+src/lib/*
+build/*
