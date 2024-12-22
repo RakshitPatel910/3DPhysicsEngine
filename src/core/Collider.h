@@ -12,6 +12,14 @@ public:
     Vector3 m_localcentroid;
     RigidBody* m_body;
 
+    Collider(
+        float mass, 
+        const Matrix4& inertiaTensor, 
+        const Vector3& centroid, 
+        RigidBody* body
+    ) : m_mass(mass), m_localInertiaTensor(inertiaTensor), m_localcentroid(centroid), m_body(body) {}
+
+
     RigidBody* getRigidBody() const {
         return m_body;
     }

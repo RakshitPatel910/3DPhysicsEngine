@@ -28,11 +28,23 @@ public:
     }
 
     Vector3& operator+=(const Vector3& b) {
-    x += b.x;
-    y += b.y;
-    z += b.z;
-    return *this;
-}
+        x += b.x;
+        y += b.y;
+        z += b.z;
+        return *this;
+    }
+
+    bool operator<(const Vector3& other) const {
+        return (x < other.x) && (y < other.y) && (z < other.z);
+    }
+
+    bool operator>(const Vector3& other) const {
+        return (x > other.x) && (y > other.y) && (z > other.z);
+    }
+
+    bool operator==(const Vector3& other) const {
+        return (x == other.x) && (y == other.y) && (z == other.z);
+    }
 
     float getX() const { return x; }
     float getY() const { return y; }
