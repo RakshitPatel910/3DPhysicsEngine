@@ -2,6 +2,7 @@
 
 #include "Vector3.h"
 #include "Collider.h"
+#include "Node.h"
 
 class AABB
 {
@@ -9,6 +10,7 @@ public:
     Vector3 minExt;
     Vector3 maxExt;
     Collider* collider;
+    Node* nodeData;
 
     AABB(const Vector3& minExt = Vector3(), const Vector3& maxExt = Vector3()) : minExt(minExt), maxExt(maxExt) {}
 
