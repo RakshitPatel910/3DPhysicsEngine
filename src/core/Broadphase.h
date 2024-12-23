@@ -41,7 +41,7 @@ public:
     virtual void Update(){}
 
     virtual ColliderPairList& ComputeCollidingPairs();
-    virtual Query(const AABB* aabb, const ColliderList& output) const;
+    virtual void Query(const AABB* aabb, const ColliderList& output) const;
 
     // Pick and Ray will be done later
 }
