@@ -15,9 +15,9 @@ private:
     ColliderPairList m_collidingPairs;
     NodeList m_invalidNodes; // list of nodes which moved outside of fat aabb
 
-    void updateNodeHelper(Node* node, NodeList& invalidNodes);
     void insertNode(Node* node, Node** parent);
     void removeNode(Node* node);
+    void getInvalidNodes(Node* node, NodeList& invalidNodes);
     void computeCollidingPairsHelper(Node* n0, Node* n1);
     void clearChildCrossHelper(Node* node);
     void crossChild(Node* node);
@@ -71,5 +71,98 @@ void AABBTree::Add(AABB* aabb){
         node->updateAABB(m_margin);
 
         insertNode(node, &m_root);
+    }
+}
+
+void AABBTree::removeNode(Node* node){
+    Node* p = node->parent;
+
+    if(p){ // node is not a root node
+        Node* sib = node->getSiblingNode();
+
+        if(p->parent){ // p is not a root node
+            sib->parent = p->parent;
+            
+            if(p == p->parent->child[0]){
+                p->parent->child[0] = sib;
+            }
+            else{
+                p->parent->child[1] = sib;
+            }
+        }
+        else{ // p is a root node
+            m_root = sib;
+            sib->parent = nullptr;
+        }
+
+        delete node;
+        delete parent;
+    }
+    else{ // node is a root node
+        m_root = nullptr;
+
+        delete node;
+    }
+}
+
+void AABBTree::Remove(AABB* aabb){
+    Node* node = aabb->nodeData;
+
+    aabb->nodeData = nullptr;
+    node->data = nullptr;
+
+    removeNode(node);
+}
+
+void AABBTree::getInvalidNodes(Node* node, NodeList& invalidNodes){
+    if(node->isLeaf()){
+        if(!node->aabb.contains(*(node->data))){
+            invalidNodes.push_back(node);
+        }
+    }
+    else{
+        getInvalidNodes(node->child[0], invalidNodes);
+        getInvalidNodes(node->child[1], invalidNodes);
+    }
+}
+
+void AABBTree::Update(){
+    if(m_root){
+        if(m_root->isLeaf()){
+            m_root->updateAABB(m_margin);
+        }
+        else{
+            m_invalidNodes.clear();
+            getInvalidNodes(m_root, m_invalidNodes);
+
+            for(auto node : m_invalidNodes){
+                Node* p = node->parent;
+                Node* sib = node->getSiblingNode();
+                Node** pPtr = &m_root; // ptr to pointer to p
+
+                if(p->parent){ // p is not a root node
+                    sib->parent = p->parent;
+
+                    if(p == p->parent->child[0]){
+                        pPtr = &p->parent->child[0]; // change p to left child
+                    }
+                    else{
+                        pPtr = &p->parent->child[1]; // change p to right child
+                    }
+                }
+                else{ // p is a root node
+                    sib->parent = nullptr;
+                }
+
+                *pPtr = sib;
+
+                delete p;
+
+                node->updateAABB(m_margin);
+                insertNode(node, &m_root);
+            }
+
+            m_invalidNodes.clear();
+        }
     }
 }

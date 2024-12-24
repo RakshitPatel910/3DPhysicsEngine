@@ -12,7 +12,7 @@ public:
     Collider* collider;
     Node* nodeData;
 
-    AABB(const Vector3& minExt = Vector3(), const Vector3& maxExt = Vector3()) : minExt(minExt), maxExt(maxExt) {}
+    AABB(const Vector3& minExt = Vector3(), const Vector3& maxExt = Vector3()) : minExt(minExt), maxExt(maxExt) { nodeData = nullptr; }
 
     static AABB fromHalfCentralExtents(const Vector3& center, const Vector3& halfExt){
         return AABB(center - halfExt, center + halfExt);
@@ -41,10 +41,10 @@ public:
                (minExt.getZ() <= other.maxExt.getZ() && maxExt.getZ() >= other.minExt.getZ());
     }
 
-    bool contains(const Vector3& pt){
-        return (minExt.getX() <= pt.getX() && maxExt.getX() >= pt.getX()) &&
-               (minExt.getY() <= pt.getY() && maxExt.getY() >= pt.getY()) &&
-               (minExt.getZ() <= pt.getZ() && maxExt.getZ() >= pt.getZ());
+    bool contains(const AABB& other){
+        return (minExt.getX() <= other.minExt.getX() && maxExt.getX() >= other.maxExt.getX()) &&
+               (minExt.getY() <= other.minExt.getY() && maxExt.getY() >= other.maxExt.getY()) &&
+               (minExt.getZ() <= other.minExt.getZ() && maxExt.getZ() >= other.maxExt.getZ());
     }
 
     float getVolume() const {
