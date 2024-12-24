@@ -140,7 +140,7 @@ void AABBTree::Update(){
                 Node* sib = node->getSiblingNode();
                 Node** pPtr = &m_root; // ptr to pointer to p
 
-                if(p->parent){ // p is not a root node
+                if(p->parent){ // p is not a root node ==> change p to sibling of node
                     sib->parent = p->parent;
 
                     if(p == p->parent->child[0]){
@@ -150,7 +150,7 @@ void AABBTree::Update(){
                         pPtr = &p->parent->child[1]; // change p to right child
                     }
                 }
-                else{ // p is a root node
+                else{ // p is a root node 
                     sib->parent = nullptr;
                 }
 
@@ -158,6 +158,7 @@ void AABBTree::Update(){
 
                 delete p;
 
+                // re-inserting invalid nodes
                 node->updateAABB(m_margin);
                 insertNode(node, &m_root);
             }
