@@ -34,3 +34,42 @@ public:
     // Pick and Ray will be done later
 
 }
+
+void AABBTree::insertNode(Node* node, Node** parent){
+    Node* p = *parent;
+
+    if(p->isLeaf()){ // if parent is leaf node ==> create a new parent with merge of prev parent and node
+        Node* newP = Node();
+
+        newP->parent = p->parent;
+        newP->setBranchNode(node, p);
+        *parent = newP; //replace prev parent node with newP
+    }
+    else{ // parent is not leaf node ==> insert node on side which has less volume increase
+        const AABB* aabb_n0 = p->child[0]->aabb;
+        const AABB* aabb_n1 = p->child[1]->aabb;
+
+        const float vol_inc_n0 = AABB::merge(aabb_n0, node->aabb).getVolume() - aabb_n0->getVolume(); // vol inc when node merged with n0
+        const float vol_inc_n1 = AABB::merge(aabb_n1, node->aabb).getVolume() - aabb_n1->getVolume(); // vol inc when node merged with n1
+
+        if( vol_inc_n0 < vol_inc_n1 ){
+            insertNode(node, &p->child[0]);
+        }
+        else{
+            insertNode(node, &p->child[1]);
+        }
+    }
+
+    (*parent)->updateAABB(m_margin);
+}
+
+void AABBTree::Add(AABB* aabb){
+    if(m_root){ // AABBTree exists
+        Node* node = new Node();
+
+        node->setLeafNode(aabb);
+        node->updateAABB(m_margin);
+
+        insertNode(node, &m_root);
+    }
+}
