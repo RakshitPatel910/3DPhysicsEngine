@@ -3,6 +3,7 @@
 #include<vector>
 
 #include "Broadphase.h"
+#include "AABB.h"
 #include "Node.h"
 
 typedef std::vector<Node *> NodeList;
@@ -25,32 +26,36 @@ private:
 public:
     AABBTree() : m_root(nullptr), m_margin(0.3f) {}
 
+    // Node* getRoot() const {
+    //     return m_root;
+    // }
+
     virtual void Add(AABB* aabb);
     virtual void Remove(AABB* aabb);
     virtual void Update();
     virtual ColliderPairList& ComputeCollidingPairs();
-    virtual void Query(const AABB* aabb, const ColliderList& output) const;
+    // virtual void Query(const AABB* aabb, const ColliderList& output) const;
 
     // Pick and Ray will be done later
 
-}
+};
 
 void AABBTree::insertNode(Node* node, Node** parent){
     Node* p = *parent;
 
     if(p->isLeaf()){ // if parent is leaf node ==> create a new parent with merge of prev parent and node
-        Node* newP = Node();
+        Node* newP = new Node();
 
         newP->parent = p->parent;
         newP->setBranchNode(node, p);
         *parent = newP; //replace prev parent node with newP
     }
     else{ // parent is not leaf node ==> insert node on side which has less volume increase
-        const AABB* aabb_n0 = p->child[0]->aabb;
-        const AABB* aabb_n1 = p->child[1]->aabb;
+        const AABB& aabb_n0 = p->child[0]->aabb;
+        const AABB& aabb_n1 = p->child[1]->aabb;
 
-        const float vol_inc_n0 = AABB::merge(aabb_n0, node->aabb).getVolume() - aabb_n0->getVolume(); // vol inc when node merged with n0
-        const float vol_inc_n1 = AABB::merge(aabb_n1, node->aabb).getVolume() - aabb_n1->getVolume(); // vol inc when node merged with n1
+        const float vol_inc_n0 = AABB::merge(aabb_n0, node->aabb).getVolume() - aabb_n0.getVolume(); // vol inc when node merged with n0
+        const float vol_inc_n1 = AABB::merge(aabb_n1, node->aabb).getVolume() - aabb_n1.getVolume(); // vol inc when node merged with n1
 
         if( vol_inc_n0 < vol_inc_n1 ){
             insertNode(node, &p->child[0]);
@@ -71,6 +76,11 @@ void AABBTree::Add(AABB* aabb){
         node->updateAABB(m_margin);
 
         insertNode(node, &m_root);
+    }
+    else{ // AABBTree does not exist
+        m_root = new Node();
+        m_root->setLeafNode(aabb);
+        m_root->updateAABB(m_margin);
     }
 }
 
@@ -96,7 +106,7 @@ void AABBTree::removeNode(Node* node){
         }
 
         delete node;
-        delete parent;
+        delete p;
     }
     else{ // node is a root node
         m_root = nullptr;
@@ -171,7 +181,7 @@ void AABBTree::Update(){
 void AABBTree::clearChildCrossHelper(Node* node){
     node->childCrossed = false;
 
-    if(!node->isLeaf){
+    if(!node->isLeaf()){
         clearChildCrossHelper(node->child[0]);
         clearChildCrossHelper(node->child[1]);
     }
@@ -218,12 +228,12 @@ void  AABBTree::computeCollidingPairsHelper(Node* n0, Node* n1){
     }
 }
 
-ColliderPairList& AABBTRee::ComputeCollidingPairs(){
+ColliderPairList& AABBTree::ComputeCollidingPairs(){
     m_collidingPairs.clear();
 
     if(!m_root || m_root->isLeaf()) return m_collidingPairs;
 
-    clearChildCrossHelper();
+    clearChildCrossHelper(m_root);
 
     computeCollidingPairsHelper(m_root->child[0], m_root->child[1]);
 

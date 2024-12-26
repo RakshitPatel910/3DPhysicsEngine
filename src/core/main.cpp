@@ -7,12 +7,23 @@
 #include "Matrix4.h"
 #include "Quaternion.h"
 #include "RigidBody.h"
+#include "AABBTree.h"
+#include "Collider.h"
+#include "AABB.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 // Global variables for the camera and box body
 RigidBody boxBody;  // Make boxBody global
+std::vector<RigidBody> rigidBodies; // Vector to store rigid bodies
+std::vector<AABB> aabbList; // Vector to store rigid bodies
+AABB aabb1;
+AABB aabb2;
+AABB aabb3;
+AABB aabb4;
+AABB aabb5;
+
 GLuint shaderProgram;
 
 glm::mat4 viewMatrix;  // Camera's view matrix
@@ -26,6 +37,8 @@ float cameraRotationSpeed = 0.05f;  // Camera rotation speed
 // Camera controls (rotation)
 float cameraYaw = -90.0f;  // Yaw (rotation around Y axis)
 float cameraPitch = 0.0f;  // Pitch (rotation around X axis)
+
+AABBTree broadphase;
 
 // Initialize OpenGL
 bool initGL(int argc, char** argv, int width, int height) {
@@ -172,7 +185,10 @@ void display() {
     glLoadMatrixf(glm::value_ptr(viewMatrix));
 
     // Render the box
-    renderBox(boxBody);
+    // renderBox(boxBody);
+    for (const auto& body : rigidBodies) {
+        renderBox(body);
+    }
 
     // Swap buffers
     glutSwapBuffers();
@@ -181,9 +197,55 @@ void display() {
 // Update function to simulate physics
 void update(int value) {
     // boxBody.applyForce(Vector3(0.0f, -50.0f, 0.0f), Vector3(0.0f, 0.3f, 0.3f));
+    // boxBody.applyForce(Vector3(100.0f, 100.0f, 0.0f), Vector3(0.0f, 0.3f, 0.3f));
 
     // Integrate physics
     boxBody.integratePhysics(0.016f);
+
+    rigidBodies[0].applyForce(Vector3(2.0f, 2.0f, 0.0f), rigidBodies[0].getPosition());
+    rigidBodies[1].applyForce(Vector3(1.0f, 0.0f, -3.0f), rigidBodies[1].getPosition());
+    rigidBodies[2].applyForce(Vector3(-1.0f, 0.0f, 5.0f), rigidBodies[2].getPosition());
+    rigidBodies[3].applyForce(Vector3(-2.0f, 0.0f, 0.0f), rigidBodies[3].getPosition());
+    rigidBodies[4].applyForce(Vector3(5.0f, -8.0f, 0.0f), rigidBodies[4].getPosition());
+    for (auto& body : rigidBodies) {
+        // body.applyForce(Vector3(10.0f, 0.0f, 0.0f), body.getPosition());
+        body.integratePhysics(0.1f);
+    }
+
+
+    aabb1.minExt = rigidBodies[0].getPosition() - Vector3(1, 1, 1);
+    aabb1.maxExt = rigidBodies[0].getPosition() + Vector3(1, 1, 1);
+
+    aabb2.minExt = rigidBodies[1].getPosition() - Vector3(1, 1, 1);
+    aabb2.maxExt = rigidBodies[1].getPosition() + Vector3(1, 1, 1);
+
+    aabb3.minExt = rigidBodies[2].getPosition() - Vector3(1, 1, 1);
+    aabb3.maxExt = rigidBodies[2].getPosition() + Vector3(1, 1, 1);
+
+    aabb4.minExt = rigidBodies[3].getPosition() - Vector3(1, 1, 1);
+    aabb4.maxExt = rigidBodies[3].getPosition() + Vector3(1, 1, 1);
+
+    aabb5.minExt = rigidBodies[4].getPosition() - Vector3(1, 1, 1);
+    aabb5.maxExt = rigidBodies[4].getPosition() + Vector3(1, 1, 1);
+
+
+    // Update AABBs (checking collisions)
+    // AABBTree broadphase;
+    for (auto& body : rigidBodies) {
+        AABB aabb(Vector3(body.getPosition().getX(), body.getPosition().getY(), body.getPosition().getZ()), Vector3(1.0f, 1.0f, 1.0f));
+        broadphase.Add(&aabb);
+    }
+
+    // Check for collisions and print them
+    broadphase.Update();
+    ColliderPairList& collidingPairs = broadphase.ComputeCollidingPairs();
+
+    if (!collidingPairs.empty()) {
+        for (const auto& pair : collidingPairs) {
+            std::cout << "Collision detected between " << pair.first->getRigidBody()->getName() << " and "
+                      << pair.second->getRigidBody()->getName() << std::endl;
+        }
+    }
 
     // Request next frame update
     glutTimerFunc(16, update, 0);
@@ -196,12 +258,48 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    // Create the box shape and rigid body
-    BoxShape box = BoxShape(10.0f, 10.0f, 10.0f, 1.0f);  // 1x1x1 box
-    boxBody = RigidBody(box, Vector3(0.0f, 0.0f, 0.0f));  // Start position at (0, 0, -10)
+    // // Create the box shape and rigid body
+    // BoxShape box = BoxShape(10.0f, 10.0f, 10.0f, 1.0f);  // 1x1x1 box
+    // boxBody = RigidBody(box, Vector3(0.0f, 0.0f, 0.0f));  // Start position at (0, 0, -10)
 
-    // Apply some force to the box body for testing
-    boxBody.applyForce(Vector3(100.0f, 100.0f, 0.0f), Vector3(0.0f, 0.3f, 0.3f));
+    // // Apply some force to the box body for testing
+    // boxBody.applyForce(Vector3(100.0f, 100.0f, 0.0f), Vector3(0.0f, 0.3f, 0.3f));
+
+
+    // Create 5 rigid bodies
+    rigidBodies.push_back(RigidBody(BoxShape(10.0f, 10.0f, 10.0f, 1.0f), Vector3(0, 0, 0), Vector3(1, 0, 0), "Box 1"));
+    rigidBodies.push_back(RigidBody(BoxShape(10.0f, 10.0f, 10.0f, 1.0f), Vector3(2, 0, 0), Vector3(0, 1, 0), "Box 2"));
+    rigidBodies.push_back(RigidBody(BoxShape(10.0f, 10.0f, 10.0f, 1.0f), Vector3(4, 0, 0), Vector3(0, 0, 1), "Box 3"));
+    rigidBodies.push_back(RigidBody(BoxShape(10.0f, 10.0f, 10.0f, 1.0f), Vector3(6, 0, 0), Vector3(-1, 0, 0), "Box 4"));
+    rigidBodies.push_back(RigidBody(BoxShape(10.0f, 10.0f, 10.0f, 1.0f), Vector3(8, 0, 0), Vector3(0, -1, 0), "Box 5"));
+
+// Create corresponding AABBs for each rigid body
+    // AABB aabb1(Vector3(0, 0, 0), Vector3(1, 1, 1));
+    // AABB aabb2(Vector3(2, 0, 0), Vector3(3, 1, 1));
+    // AABB aabb3(Vector3(4, 0, 0), Vector3(5, 1, 1));
+    // AABB aabb4(Vector3(6, 0, 0), Vector3(7, 1, 1));
+    // AABB aabb5(Vector3(8, 0, 0), Vector3(9, 1, 1));
+
+    aabb1 = AABB(Vector3(0, 0, 0), Vector3(1, 1, 1));
+    aabb2 = AABB(Vector3(2, 0, 0), Vector3(3, 1, 1));
+    aabb3 = AABB(Vector3(4, 0, 0), Vector3(5, 1, 1));
+    aabb4 = AABB(Vector3(6, 0, 0), Vector3(7, 1, 1));
+    aabb5 = AABB(Vector3(8, 0, 0), Vector3(9, 1, 1));
+
+    // Link AABBs to the rigid bodies (Collider)
+    aabb1.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[0]);
+    aabb2.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[1]);
+    aabb3.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[2]);
+    aabb4.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[3]);
+    aabb5.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[4]);
+
+    // Create an AABBTree instance for broad-phase collision detection
+    // AABBTree broadphase;
+    broadphase.Add(&aabb1);
+    broadphase.Add(&aabb2);
+    broadphase.Add(&aabb3);
+    broadphase.Add(&aabb4);
+    broadphase.Add(&aabb5);
 
     // Set GLUT callbacks
     glutDisplayFunc(display);
@@ -211,6 +309,13 @@ int main(int argc, char** argv) {
 
     // Start GLUT main loop
     glutMainLoop();
+
+
+    delete aabb1.collider;
+    delete aabb2.collider;
+    delete aabb3.collider;
+    delete aabb4.collider;
+    delete aabb5.collider;
 
     return 0;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include<cmath>
+#include<string>
 #include "Vector3.h"
 #include "Matrix4.h"
 #include "Quaternion.h"
@@ -42,6 +43,7 @@ private:
 
     Vector3 pos;
     Vector3 v;
+    std::string m_name;
     Vector3 ang_v;
     Vector3 force;
     Vector3 torque;
@@ -59,12 +61,13 @@ public:
         const BoxShape& shape = BoxShape(),
         const Vector3& pos = Vector3(),
         Vector3 v = Vector3(),
+        std::string m_name = "",
         Vector3 ang_v = Vector3(),
         Vector3 force = Vector3(),
         Vector3 torque = Vector3(),
         Quaternion q = Quaternion(),
         Matrix4 tr_mat = Matrix4()
-    ) : shape(shape), pos(pos), v(v), ang_v(ang_v), force(force), torque(torque), q(q), tr_mat(tr_mat) {
+    ) : shape(shape), pos(pos), v(v), m_name(m_name), ang_v(ang_v), force(force), torque(torque), q(q), tr_mat(tr_mat) {
         // updateInertiaTensor();
     }
 
@@ -72,6 +75,8 @@ public:
     Vector3 getPosition() const { return pos; }
     Vector3 getTorque() const { return torque; }
     Quaternion getOrientation() const { return q; }
+    std::string getName() const { return m_name; }
+
 
     Matrix4 getTransformMatrix() const {
         return tr_mat;
@@ -128,7 +133,7 @@ public:
         // dq = dq * q * 0.5f * dt;
         dq = q * dq * 0.5f * dt;
         q = q + dq;
-        q.printQ();
+        // q.printQ();
         q.normalize();
 
         force = Vector3();
