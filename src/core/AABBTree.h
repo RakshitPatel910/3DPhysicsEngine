@@ -167,3 +167,65 @@ void AABBTree::Update(){
         }
     }
 }
+
+void AABBTree::clearChildCrossHelper(Node* node){
+    node->childCrossed = false;
+
+    if(!node->isLeaf){
+        clearChildCrossHelper(node->child[0]);
+        clearChildCrossHelper(node->child[1]);
+    }
+}
+
+void AABBTree::crossChild(Node* node){
+    if(!node->childCrossed){
+        computeCollidingPairsHelper(node->child[0], node->child[1]);
+
+        node->childCrossed = true;
+    }
+}
+
+void  AABBTree::computeCollidingPairsHelper(Node* n0, Node* n1){
+    if(n0->isLeaf()){
+        if(n1->isLeaf()){ // n0 is leaf, n1 is leaf
+            if(n0->data->intersects(*n1->data)){
+                m_collidingPairs.push_back(std::make_pair(n0->data->collider, n1->data->collider));
+            }
+        }
+        else{ // n0 is lead, n1 is not leaf
+            crossChild(n1);
+
+            computeCollidingPairsHelper(n0, n1->child[0]);
+            computeCollidingPairsHelper(n0, n1->child[1]);
+        }
+    }
+    else{
+        if(n1->isLeaf()){ // n0 is not leaf, n1 is leaf
+            crossChild(n0);
+
+            computeCollidingPairsHelper(n0->child[0], n1);
+            computeCollidingPairsHelper(n0->child[1], n1);
+        }
+        else{ // n0 is not leaf, n1 is not leaf
+            crossChild(n0);
+            crossChild(n1);
+
+            computeCollidingPairsHelper(n0->child[0], n1->child[0]);
+            computeCollidingPairsHelper(n0->child[0], n1->child[1]);
+            computeCollidingPairsHelper(n0->child[1], n1->child[0]);
+            computeCollidingPairsHelper(n0->child[1], n1->child[1]);
+        }
+    }
+}
+
+ColliderPairList& AABBTRee::ComputeCollidingPairs(){
+    m_collidingPairs.clear();
+
+    if(!m_root || m_root->isLeaf()) return m_collidingPairs;
+
+    clearChildCrossHelper();
+
+    computeCollidingPairsHelper(m_root->child[0], m_root->child[1]);
+
+    return m_collidingPairs;
+}

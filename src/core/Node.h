@@ -3,6 +3,8 @@
 #include "Vector3.h"
 #include "AABB.h"
 
+class AABB;
+
 class Node
 {
 // private:
@@ -10,8 +12,8 @@ public:
     Node* parent;
     Node* child[2];
 
-    AABB aabb;
-    AABB* data;
+    AABB aabb; // fat aabb
+    AABB* data; // real aabb
 
     bool childCrossed;
 

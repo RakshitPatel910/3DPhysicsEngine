@@ -11,6 +11,8 @@ typedef std::list<ColliderPair> ColliderPairList;
 typedef std::vector<Collider *> ColliderList;
 typedef std::vector<AABB *> AABBList;
 
+class AABB;
+
 class Broadphase
 {
 private:
