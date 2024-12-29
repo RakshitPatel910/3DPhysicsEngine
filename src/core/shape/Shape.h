@@ -5,6 +5,7 @@
 class Shape
 {
 public:
+    virtual ~Shape() {}
     virtual Vector3 Support(const Vector3& dir) const = 0;
 };
 

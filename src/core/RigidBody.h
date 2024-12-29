@@ -89,6 +89,13 @@ public:
         return matT.transformVec(v - pos);
     }
 
+    Vector3 localToGlobalVector(const Vector3& v){
+        q.normalize();
+        Matrix4 mat = q.toMatrix4();
+
+        return matT.transformVec(v + pos);
+    }
+
     void updateInertiaTensor(){
         Matrix4 localInertia = shape.inertiaTensor; // Use shape's local inertia tensor
         Matrix4 rotationMat = q.toMatrix4();
