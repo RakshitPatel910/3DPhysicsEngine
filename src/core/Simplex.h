@@ -32,8 +32,8 @@ public:
 
     bool containsOrigin(Vector3& dir){
         if(m_simplex.size() == 2){ // line segment
-            Vector3 A = points[1];
-            Vector3 B = points[0];
+            Vector3 A = m_simplex[1];
+            Vector3 B = m_simplex[0];
 
             Vector3 AB = B - A;
             Vector3 AO = -A;
@@ -50,9 +50,9 @@ public:
             return false;
         }
         else if(m_simplex.size() == 3){ // triangle
-            Vector3 A = points[2];
-            Vector3 B = points[1];
-            Vector3 C = points[0];
+            Vector3 A = m_simplex[2];
+            Vector3 B = m_simplex[1];
+            Vector3 C = m_simplex[0];
 
             Vector3 AB = B - A;
             Vector3 AC = C - A;
@@ -81,10 +81,10 @@ public:
             return false;
         }
         else f(m_simplex.size() == 4){ // tetrahedron
-            Vector3 A = points[3];
-            Vector3 B = points[2];
-            Vector3 C = points[1];
-            Vector3 D = points[0];
+            Vector3 A = m_simplex[3];
+            Vector3 B = m_simplex[2];
+            Vector3 C = m_simplex[1];
+            Vector3 D = m_simplex[0];
             
             Vector3 AB = B - A;
             Vector3 AC = C - A;

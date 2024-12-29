@@ -20,7 +20,7 @@ public:
     virtual Vector3 Support(const Vector3& dir) const override {
         return m_center + dir.normalized() * m_radius;
     }
-}
+};
 
 class Cube : public Shape
 {
@@ -35,8 +35,8 @@ public:
             m_halfext.getX() * (dir.getX() >= 0 ? 1 : -1),
             m_halfext.getY() * (dir.getY() >= 0 ? 1 : -1),
             m_halfext.getZ() * (dir.getZ() >= 0 ? 1 : -1)
-        )
+        );
 
         return m_center + vec;
     }
-}
+};
