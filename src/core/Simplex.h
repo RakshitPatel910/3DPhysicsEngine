@@ -75,7 +75,7 @@ public:
             else{ // origin is inside triangel, no necessarily on the same plane
                 dir = normalABC;
 
-                return true;
+                // return true;
             }
 
             return false;

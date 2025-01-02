@@ -70,10 +70,20 @@ public:
         return std::sqrt( x*x + y*y + z*z );
     }
 
+    float lengthSq() const {
+        return x*x + y*y + z*z ;
+    }
+
     Vector3 normalized() const {
         float len = length();
 
         return len > 0 ? *this * (1.0f / len) : Vector3();
+    }
+
+    void negate() const {
+        x = -x;
+        y = -y;
+        z = -z;
     }
 
     float angleBetween(const Vector3& b) const {

@@ -142,6 +142,32 @@ public:
         return mat;
     }
     
+    static Matrix4 getRotationMatrixByAngleOnAxis(float angle, const Vec3& axis){
+        Matrix4 mat;
+
+        Vector3 nAxis = axis.normalized(); // Normalize the axis
+        float x = nAxis.getX(), y = nAxis.getY(), z = nAxis.getZ();
+
+        float c = cos(angle);           // Cosine of angle
+        float s = sin(angle);           // Sine of angle
+        float oneMinusC = 1.0f - c;     // 1 - cos(angle)
+
+        // Populate rotation matrix using the axis-angle formula
+        mat.m[0][0] = c + x * x * oneMinusC;
+        mat.m[0][1] = x * y * oneMinusC - z * s;
+        mat.m[0][2] = x * z * oneMinusC + y * s;
+
+        mat.m[1][0] = y * x * oneMinusC + z * s;
+        mat.m[1][1] = c + y * y * oneMinusC;
+        mat.m[1][2] = y * z * oneMinusC - x * s;
+
+        mat.m[2][0] = z * x * oneMinusC - y * s;
+        mat.m[2][1] = z * y * oneMinusC + x * s;
+        mat.m[2][2] = c + z * z * oneMinusC;
+
+        return mat;
+    }
+
     Vector3 transformVec(const Vector3& vec) const {
         return Vector3(
             m[0] * vec.getX() + m[4] * vec.getY() + m[8]  * vec.getZ(),
