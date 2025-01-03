@@ -47,13 +47,13 @@ public:
 
         Vector3 direction = Vector3(1, 0, 0); // initial direction
 
-        Vector3 support = shapeA->Support(direction) - shapeB.Support(-direction);
+        Vector3 support = shapeA->Support(direction) - shapeB->Support(-direction);
         simplex.addPoint(support);
 
         direction = -direction;
 
         while (true) {
-            support = shapeA->Support(direction) - shapeB.Support(-direction);
+            support = shapeA->Support(direction) - shapeB->Support(-direction);
 
             if(support.dot(direction) <= 0){ // no collision
                 return false;
