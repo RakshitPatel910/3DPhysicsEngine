@@ -93,7 +93,7 @@ public:
         q.normalize();
         Matrix4 mat = q.toMatrix4();
 
-        return matT.transformVec(v + pos);
+        return mat.transformVec(v + pos);
     }
 
     void updateInertiaTensor(){

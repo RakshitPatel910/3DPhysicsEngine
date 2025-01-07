@@ -10,6 +10,7 @@
 #include "AABBTree.h"
 #include "Collider.h"
 #include "AABB.h"
+#include "shape/Shape.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -286,12 +287,18 @@ int main(int argc, char** argv) {
     aabb4 = AABB(Vector3(6, 0, 0), Vector3(7, 1, 1));
     aabb5 = AABB(Vector3(8, 0, 0), Vector3(9, 1, 1));
 
+    Cube sphere1(Vector3(0.0f, 0.0f, 0.0f), Vector3(1.0f, 0.6f, 1.0f));
+    Cube sphere2(Vector3(2.0f, 0.0f, 0.0f), Vector3(1.3f, 1.0f, 1.0f));
+    Cube sphere3(Vector3(0.0f, 0.0f, 0.0f), Vector3(1.0f, 0.6f, 1.0f));
+    Cube sphere4(Vector3(2.0f, 0.0f, 0.0f), Vector3(1.3f, 1.0f, 1.0f));
+    Cube sphere5(Vector3(0.0f, 0.0f, 0.0f), Vector3(1.0f, 0.6f, 1.0f));
+
     // Link AABBs to the rigid bodies (Collider)
-    aabb1.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[0]);
-    aabb2.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[1]);
-    aabb3.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[2]);
-    aabb4.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[3]);
-    aabb5.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[4]);
+    aabb1.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[0], &sphere1);
+    aabb2.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[1], &sphere2);
+    aabb3.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[2], &sphere3);
+    aabb4.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[3], &sphere4);
+    aabb5.collider = new Collider(1.0f, Matrix4(), Vector3(), &rigidBodies[4], &sphere5);
 
     // Create an AABBTree instance for broad-phase collision detection
     // AABBTree broadphase;

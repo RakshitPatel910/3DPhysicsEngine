@@ -3,6 +3,7 @@
 #include<iostream>
 
 #include "Vector3.h"
+#include "AABB.h"
 
 class AABB;
 

@@ -27,7 +27,7 @@ find_package(OpenGL REQUIRED)
 # find_package(GLFW3 REQUIRED)
 
 # Recursively find all .cpp and .h files in src/core
-file(GLOB_RECURSE SRC_FILES "D:/Projects/3DPhysicsEngine/src/core/*.cpp" "D:/Projects/3DPhysicsEngine/src/core/*.h")
+file(GLOB_RECURSE SRC_FILES "D:/Projects/3DPhysicsEngine/src/core/*.h" "D:/Projects/3DPhysicsEngine/src/core/*.cpp")
 
 # Main source file
 set(MAIN_SRC "D:/Projects/3DPhysicsEngine/src/core/main.cpp")

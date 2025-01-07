@@ -28,7 +28,7 @@ public:
     Vector3 m_center;
     Vector3 m_halfext;
 
-    Cube(const Vector3& center, const float halfext) : m_center(center), m_halfext(halfext) {}
+    Cube(const Vector3& center, const Vector3& halfext) : m_center(center), m_halfext(halfext) {}
 
     virtual Vector3 Support(const Vector3& dir) const override {
         Vector3 vec = Vector3(
