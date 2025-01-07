@@ -15,6 +15,10 @@ public:
         return Vector3( x + b.x, y + b.y, z + b.z );
     }
 
+    Vector3 operator-() const {
+        return Vector3(-x, -y, -z);
+    }
+
     Vector3 operator-(const Vector3& b) const {
         return Vector3( x - b.x, y - b.y, z - b.z );
     }
@@ -80,7 +84,7 @@ public:
         return len > 0 ? *this * (1.0f / len) : Vector3();
     }
 
-    void negate() const {
+    void negate() {
         x = -x;
         y = -y;
         z = -z;
@@ -100,5 +104,9 @@ public:
 
         return std::acos(cosTheta);
     }
+
+    // bool isCollinear(const Vector3& a, const Vector3& b){
+    //     return std::abs()
+    // }
 };
 

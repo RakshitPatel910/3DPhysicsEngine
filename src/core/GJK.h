@@ -1,5 +1,7 @@
 #pragma once
 
+#include<algorithm>
+
 #include "Vector3.h"
 #include "Collider.h"
 #include "shape/Shape.h"
@@ -30,45 +32,54 @@ private:
         const float det = v30.dot(v31.cross(v32)); // determinant
 
         if( det > 0.0f ){
-            std:swap(simplex[0], simplex[1]);
+            std::swap(simplex[0], simplex[1]);
         }
     }
 
 public:
-    static constexpr k_eps = 0.00001f;
-    static constexpr k_epsSq = k_eps * k_eps;
+    static constexpr float k_eps = 0.00001f;
+    static constexpr float k_epsSq = k_eps * k_eps;
     // const float PI = 3.14159265358979323846f; 
     // const float PI_2 = PI / 2.0f;             
     // const float PI_3 = PI / 3.0f;             
 
 
-    bool isIntersecting(const Shape& shapeA, const Shape& shapeB){
-        Simplex simplex;
+    bool isIntersecting(Simplex& simplex, const Shape& shapeA, const Shape& shapeB){
+        // Simplex simplex;
 
         Vector3 direction = Vector3(1, 0, 0); // initial direction
 
-        Vector3 support = shapeA->Support(direction) - shapeB->Support(-direction);
+        Vector3 support = shapeA.Support(direction) - shapeB.Support(-direction);
+
+        if(direction.dot(support) >= support.length() * 0.8f){ // stability check
+            direction = Vector3(0, 1, 0);
+            support = shapeA.Support(direction) - shapeB.Support(-direction);
+        }
+        
         simplex.addPoint(support);
 
         direction = -direction;
 
         while (true) {
-            support = shapeA->Support(direction) - shapeB->Support(-direction);
+            support = shapeA.Support(direction) - shapeB.Support(-direction);
 
-            if(support.dot(direction) <= 0){ // no collision
+            if(support.dot(direction) <= 0.0f){ // no collision
                 return false;
             }
 
             simplex.addPoint(support);
 
             if(simplex.containsOrigin(direction)){ // collision
+                simplexToTetrahedron(simplex, shapeA, shapeB);
+
                 return true;
             }
         }
         
     }
 
-    void simplexToTetrahedron(Simplex& simplex, Simplex& simplexA, Simplex& simplexB, const Shape& shapeA, const Shape& shapeB){
+    // void simplexToTetrahedron(Simplex& simplex, Simplex& simplexA, Simplex& simplexB, const Shape& shapeA, const Shape& shapeB){
+    void simplexToTetrahedron(Simplex& simplex, const Shape& shapeA, const Shape& shapeB){
         static const Vector3 k_dir[] = {
             Vector3(1.0f, 0.0f, 0.0f),
             Vector3(-1.0f, 0.0f, 0.0f),
@@ -84,50 +95,58 @@ public:
             Vector3(0.0f, 0.0f, 1.0f)
         };
 
+        Vector3 dir;
+        Vector3 line;
+        unsigned leastSigAx;
+        Matrix4 rMat;
+
         switch (simplex.size())
         {
             case 1:
                 for( const Vector3& dir : k_dir ){
-                    simplex[1] = shapeA->Support(dir) - shapeB->Support(-dir);
+                    simplex[1] = shapeA.Support(dir) - shapeB.Support(-dir);
 
-                    if( (simplex[1] - simplex[0]).lengthSq >= k_epsSq ){ // if far enough
+                    if( (simplex[1] - simplex[0]).lengthSq() >= k_epsSq ){ // if far enough
                         break;
                     }
                 }
-            
+                [[fallthrough]];
             case 2:
-                Vector3 line = simplex[1] - simplex[0];
-                unsigned leastSigAx = leastSignificantComponent(line); // axis with smallest component
+                line = simplex[1] - simplex[0];
+                leastSigAx = leastSignificantComponent(line); // axis with smallest component
 
-                Vector3 dir = line.cros(k_axes[leastSigAx]);
+                // Vector3 dir = line.cross(k_axes[leastSigAx]);
+                dir = line.cross(k_axes[leastSigAx]);
 
-                Matrix4 rMat = Matrix4::getRotationMatrixByAngleOnAxis(60, line); // matrix to rotate by 60
+                rMat = Matrix4::getRotationMatrixByAngleOnAxis(60, line); // matrix to rotate by 60
 
                 for( int i = 0; i < 6; i++ ){
-                    simplex[2] = shapeA->Support(dir) - shapeB->Support(-dir);
+                    simplex[2] = shapeA.Support(dir) - shapeB.Support(-dir);
 
-                    if( simplex[2].lengthSq >= k_epsSq ){
+                    if( simplex[2].lengthSq() >= k_epsSq ){
                         break;
                     }         
 
                     dir = rMat.transformVec(line);       
                 }
-            
+                [[fallthrough]];
+
             case 3:
                 const Vector3 v01 = simplex[1] - simplex[0]; 
                 const Vector3 v02 = simplex[2] - simplex[0]; 
 
-                Vector3 dir = v01.cross(v02);
+                // Vector3 dir = v01.cross(v02);
+                dir = v01.cross(v02);
 
-                simplex[3] = shapeA->Support(dir) - shapeB->Support(-dir);
+                simplex[3] = shapeA.Support(dir) - shapeB.Support(-dir);
 
-                if( simplex[3].lengthSq < k_epsSq ){ // if not far enough
+                if( simplex[3].lengthSq() < k_epsSq ){ // if not far enough
                     dir.negate();
-                    simplex[3] = shapeA->Support(dir) - shapeB->Support(-dir);
+                    simplex[3] = shapeA.Support(dir) - shapeB.Support(-dir);
                 }
         }
 
-        fixTetrahedronWinding(simplex&); // so that all normal of triangle face outwards of tetrahedron
+        fixTetrahedronWinding(simplex); // so that all normal of triangle face outwards of tetrahedron
 
     }
     

@@ -10,12 +10,20 @@ private:
     std::vector<Vector3> m_simplex;
 
 public:
-    Vector3& operator[](size_t i) const {
+    const Vector3& operator[](size_t i) const {
+        return m_simplex[i];
+    }
+
+    Vector3& operator[](size_t i) {
         return m_simplex[i];
     }
 
     size_t size() const {
         return m_simplex.size();
+    }
+
+    const std::vector<Vector3>& getSimplex() const {
+        return m_simplex;
     }
 
     void addPoint(const Vector3& point){
@@ -42,6 +50,37 @@ public:
             //     return true;
             // }
 
+            // if (std::abs(AB.dot(AO)) == AB.length() * AO.length()) {
+            //     // If vectors are collinear, choose a non-zero direction
+            //     // dir = AB.normalized();
+            //     // return false;
+
+            //     Matrix4 rMat = Matrix4::getRotationMatrixByAngleOnAxis(90, AB);
+            //     dir = rMat.transformVec(AB);
+            //     std::cout<<"90 dir: ";
+            //     dir.printV();
+            //     return false;
+            // }
+
+
+            float crossProduct = AB.cross(AO).length();
+
+            if (crossProduct < 1e-6f) {
+                // The origin is on the line, apply perturbation to avoid degeneracy
+                // Perturb by adding a small random offset perpendicular to AB
+                Vector3 perturbDir = AB.cross(Vector3(0, 0, 1));  // Cross product with a fixed vector (Z-axis) to get a perpendicular direction
+                if (perturbDir.length() < 1e-6f) {
+                    perturbDir = AB.cross(Vector3(1, 0, 0));  // If cross product is zero, try a different axis
+                }
+
+                perturbDir = perturbDir.normalized() * 0.001f;  // Small perturbation magnitude
+                dir = AB + perturbDir;  // Apply perturbation
+                dir = dir.normalized(); // Normalize the resulting direction
+
+                return false;  // Continue, as we don't have a definitive answer yet
+            }
+
+
             dir = AB.cross(AO).cross(AB);
             if(dir.length() < 1e-6f){
                 dir = dir.normalized();
@@ -58,7 +97,25 @@ public:
             Vector3 AC = C - A;
             Vector3 AO = -A;
 
-            Vector3 normalABC = AB.cross(AC); // normal to plane formed by AB and AC
+            Vector3 normalABC = AB.cross(AC).normalized(); // normal to plane formed by AB and AC
+
+
+            // If the normal is close to zero, the points are collinear (degenerate case)
+            if (normalABC.length() < 1e-6f) {
+                // Points are collinear, apply a small perturbation
+                Vector3 perturbDir = AB.cross(Vector3(0, 0, 1));  // Perpendicular direction (using Z-axis)
+                if (perturbDir.length() < 1e-6f) {
+                    perturbDir = AB.cross(Vector3(1, 0, 0));  // If the cross product is zero, use another axis (X-axis)
+                }
+
+                perturbDir = perturbDir.normalized() * 0.001f; // Apply a small perturbation
+                dir = AB + perturbDir;  // Perturb the direction to avoid degeneracy
+                dir = dir.normalized(); // Normalize the direction
+
+                return false; // Continue, as we don't have a definitive result yet
+            }
+
+
 
             // for understanding this easily use right hand thumb rule
             if(normalABC.cross(AC).dot(AO) > 0){ // origin is on the side of normal to plane made by normalABC and AC (not AC and normalABC)
@@ -80,7 +137,7 @@ public:
 
             return false;
         }
-        else f(m_simplex.size() == 4){ // tetrahedron
+        else if(m_simplex.size() == 4){ // tetrahedron
             Vector3 A = m_simplex[3];
             Vector3 B = m_simplex[2];
             Vector3 C = m_simplex[1];
@@ -91,10 +148,25 @@ public:
             Vector3 AD = D - A;
             Vector3 AO = -A;
 
-            Vector3 normalABC = AB.cross(AC); // normal to plane formed by AB and AC, normal points outside of tetrahedron
-            Vector3 normalADB = AD.cross(AB); // normal to plane formed by AD and AB, normal points outside of tetrahedron
-            Vector3 normalACD = AC.cross(AD); // normal to plane formed by AC and AD, normal points outside of tetrahedron
-            Vector3 normalBCD = (C - B).cross(D - B); // normal to plane formed by BC and BD, normal points outside of tetrahedron
+            Vector3 normalABC = AB.cross(AC).normalized(); // normal to plane formed by AB and AC, normal points outside of tetrahedron
+            Vector3 normalADB = AD.cross(AB).normalized(); // normal to plane formed by AD and AB, normal points outside of tetrahedron
+            Vector3 normalACD = AC.cross(AD).normalized(); // normal to plane formed by AC and AD, normal points outside of tetrahedron
+            Vector3 normalBCD = (C - B).cross(D - B).normalized(); // normal to plane formed by BC and BD, normal points outside of tetrahedron
+
+
+            // If the normals are too small (coplanarity check), perturb the direction
+            if (normalABC.length() < 1e-6f || normalADB.length() < 1e-6f || normalACD.length() < 1e-6f || normalBCD.length() < 1e-6f) {
+                // Apply a small perturbation
+                Vector3 perturbDir = normalABC.cross(Vector3(0, 0, 1)); // Perpendicular direction using Z-axis
+                if (perturbDir.length() < 1e-6f) {
+                    perturbDir = normalABC.cross(Vector3(1, 0, 0)); // If too small, use the X-axis
+                }
+
+                perturbDir = perturbDir.normalized() * 0.001f; // Small perturbation
+                dir = perturbDir; // Update direction
+                return false; // Continue with the new direction
+            }
+
 
             if(normalABC.dot(AO) > 0){
                 m_simplex.erase(m_simplex.begin()); // removing D  {D, C, B, A} ==> {C, B, A}
@@ -111,11 +183,11 @@ public:
 
                 dir = normalACD;
             }
-            else if(normalBCD.dot(AO) > 0){
-                m_simplex.erase(m_simplex.begin() + 3); // removing A  {D, C, B, A} ==> {D, C, B}
+            // else if(normalBCD.dot(AO) > 0){
+            //     m_simplex.erase(m_simplex.begin() + 3); // removing A  {D, C, B, A} ==> {D, C, B}
 
-                dir = normalBCD;
-            }
+            //     dir = normalBCD;
+            // }
             else{ // origin inside tetrahedron
                 return true;
             }
