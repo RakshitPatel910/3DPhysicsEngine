@@ -6,8 +6,8 @@
 #include "Collider.h"
 #include "AABB.h"
 #include "Node.h"
-#include "AABB.cpp"
-#include "Node.cpp"
+// #include "AABB.cpp"
+// #include "Node.cpp"
 
 typedef std::pair<Collider *, Collider *> ColliderPair;
 typedef std::list<ColliderPair> ColliderPairList;
