@@ -11,6 +11,7 @@ include_directories(
     C:/msys64/mingw64/include/SDL2    # SDL2 include directory
     C:/msys64/mingw64/include/GL      # OpenGL include directory
     C:/msys64/mingw64/include/GLFW    # GLFW include directory
+    C:/msys64/mingw64/include/eigen3    # Eigen include directory
 )
 
 # Link directories
@@ -44,6 +45,7 @@ target_link_libraries(3DPhysicsEngine
     OpenGL32
     freeglut
     glew32
+    # eigen3
 )
 
 # Additional linking if necessary (Uncomment if GLFW is manually set)
