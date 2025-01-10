@@ -53,6 +53,12 @@ struct ContactData
     Vector3 contactTangent2;
 
     float penetrationDepth;
+
+    float normalImpulseSum;
+    float tangent1ImpulseSum;
+    float tangent2ImpulseSum;
+
+    ContactData() : normalImpulseSum(0.0f), tangent1ImpulseSum(0.0f), tangent2ImpulseSum(0.0f) {}
 };
 
 class EPA

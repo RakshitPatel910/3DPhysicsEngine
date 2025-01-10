@@ -187,7 +187,11 @@ void display() {
 
     // Render the box
     // renderBox(boxBody);
-    for (const auto& body : rigidBodies) {
+    for (auto& body : rigidBodies) {
+        Vector3 g = Vector3(0.0f, -9.8f, 0.0f);
+
+        body.applyForce(g, body.getPosition());
+
         renderBox(body);
     }
 
@@ -268,7 +272,7 @@ int main(int argc, char** argv) {
 
 
     // Create 5 rigid bodies
-    rigidBodies.push_back(RigidBody(BoxShape(10.0f, 10.0f, 10.0f, 1.0f), Vector3(0, 0, 0), Vector3(1, 0, 0), "Box 1"));
+    rigidBodies.push_back(RigidBody(BoxShape(10.0f, 10.0f, 10.0f, 1.0f), Vector3(0, 0, 0), Vector3(1, 0, 0), "Box 1", Vector3(10, 10, 0), Vector3(10, -10, 0)));
     rigidBodies.push_back(RigidBody(BoxShape(10.0f, 10.0f, 10.0f, 1.0f), Vector3(2, 0, 0), Vector3(0, 1, 0), "Box 2"));
     rigidBodies.push_back(RigidBody(BoxShape(10.0f, 10.0f, 10.0f, 1.0f), Vector3(4, 0, 0), Vector3(0, 0, 1), "Box 3"));
     rigidBodies.push_back(RigidBody(BoxShape(10.0f, 10.0f, 10.0f, 1.0f), Vector3(6, 0, 0), Vector3(-1, 0, 0), "Box 4"));
@@ -312,7 +316,7 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
     glutKeyboardFunc(keyboard);
     glutSpecialFunc(specialKeys);
-    glutTimerFunc(16, update, 0);
+    glutTimerFunc(1000 / 60, update, 0);
 
     // Start GLUT main loop
     glutMainLoop();

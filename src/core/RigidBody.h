@@ -73,6 +73,9 @@ public:
 
 
     Vector3 getPosition() const { return pos; }
+    Vector3 getVelocity() const { return v; }
+    Vector3 getAngularVelocity() const { return ang_v; }
+    Vector3 getForce() const { return force; }
     Vector3 getTorque() const { return torque; }
     Quaternion getOrientation() const { return q; }
     std::string getName() const { return m_name; }
@@ -80,6 +83,14 @@ public:
 
     Matrix4 getTransformMatrix() const {
         return tr_mat;
+    }
+
+    Matrix4 getInertiaTensor() const {
+        return inertiaTensor;
+    }
+
+    Matrix4 getInverseInertiaTensor() const {
+        return inverseInertiaTensor;
     }
 
     Vector3 globalToLocalVector(const Vector3& v){

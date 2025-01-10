@@ -1,10 +1,11 @@
 #pragma once
 
 #include<cstring>
-#include "Vector3.h"
-
+#include<Eigen/Dense>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Vector3.h"
 
 class Matrix4
 {
@@ -77,6 +78,25 @@ public:
             m[8], m[9], m[10], m[11],
             m[12], m[13], m[14], m[15]
         );
+    }
+
+    Eigen::Matrix3f toEigenMatrix3f() const {
+        Eigen::Matrix3f result;
+
+        // Extract the top-left 3x3 block and assign to Eigen::Matrix3f
+        result(0, 0) = m[0];
+        result(0, 1) = m[1];
+        result(0, 2) = m[2];
+
+        result(1, 0) = m[4];
+        result(1, 1) = m[5];
+        result(1, 2) = m[6];
+
+        result(2, 0) = m[8];
+        result(2, 1) = m[9];
+        result(2, 2) = m[10];
+
+        return result;
     }
 
     static Matrix4 getTranslationMatrix(const Vector3& tVec){
