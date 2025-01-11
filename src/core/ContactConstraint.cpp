@@ -27,7 +27,9 @@ void calcJacobian(){
 
     J << Ja, Jb;
 
-    effectiveMass = J * M_inv * J.transpose();
+    Minv_Jtr << M_inv * J.transpose();
+
+    effectiveMass = J * Minv_Jtr;
 }
 
 void solveConstraint(float time, std::shared_ptr<ContactConstraint> contact){
@@ -59,5 +61,10 @@ void solveConstraint(float time, std::shared_ptr<ContactConstraint> contact){
 
     lambda = impulseSum - oldImpulseSum;
 
-    
+    Eigen::Matrix<float, 12, 1> delta_V = Minv_Jtr * lamda;
+
+    Va = Va - Vector3(delta_V(0, 0), delta_V(1, 0), delta_V(2, 0));
+    Wa = Wa - Vector3(delta_V(3, 0), delta_V(4, 0), delta_V(5, 0));
+    Vb = Vb + Vector3(delta_V(6, 0), delta_V(7, 0), delta_V(8, 0));
+    Wb = Wb + Vector3(delta_V(9, 0), delta_V(10, 0), delta_V(11, 0));
 }
