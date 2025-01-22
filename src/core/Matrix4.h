@@ -188,6 +188,7 @@ public:
         return mat;
     }
 
+    // Do i need to add translation part for transforming Vector3 ????
     Vector3 transformVec(const Vector3& vec) const {
         return Vector3(
             m[0] * vec.getX() + m[4] * vec.getY() + m[8]  * vec.getZ(),

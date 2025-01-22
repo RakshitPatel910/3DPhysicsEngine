@@ -66,9 +66,10 @@ public:
         Vector3 force = Vector3(),
         Vector3 torque = Vector3(),
         Quaternion q = Quaternion(),
-        Matrix4 tr_mat = Matrix4()
+        // Matrix4 tr_mat = Matrix4()
     ) : shape(shape), pos(pos), v(v), m_name(m_name), ang_v(ang_v), force(force), torque(torque), q(q), tr_mat(tr_mat) {
-        // updateInertiaTensor();
+        updateInertiaTensor();
+        updateTransform();
     }
 
 
@@ -97,14 +98,24 @@ public:
         q.normalize();
         Matrix4 matT = q.toMatrix4().transpose();
 
-        return matT.transformVec(v - pos);
+        matT.m[12] += pos.getX();
+        matT.m[13] += pos.getY();
+        matT.m[14] += pos.getZ();
+
+        matT = matT.fromGlm( glm::inverse(matT.toGlm()) );
+
+        return matT.transformVec(v);
     }
 
     Vector3 localToGlobalVector(const Vector3& v){
         q.normalize();
         Matrix4 mat = q.toMatrix4();
 
-        return mat.transformVec(v + pos);
+        mat.m[12] += pos.getX();
+        mat.m[13] += pos.getY();
+        mat.m[14] += pos.getZ();
+
+        return mat.transformVec(v);
     }
 
     void updateInertiaTensor(){
