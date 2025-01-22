@@ -27,7 +27,7 @@ public:
         const Vector3& centroid, 
         RigidBody* body,
         Shape* shape,
-        ColliderType colliderType = ColliderType::DYNAMIC;
+        ColliderType colliderType = ColliderType::DYNAMIC
     ) : 
         m_mass(mass), 
         m_localInertiaTensor(inertiaTensor), 
@@ -42,8 +42,16 @@ public:
         return m_body;
     }
 
-    Vector3 support(const Vector3& dir) const {
-        return m_shape->Support(dir);
+    Vector3 Support(const Vector3& dir) const {
+        // return m_shape->Support(dir);
+
+        Vector3 localDir = m_body->globalToLocalVector(dir);
+
+        Vector3 support = m_shape->Support(localDir);
+
+        support = m_body->localToGlobalVector(support);
+
+        return support;
     }
 };
 
