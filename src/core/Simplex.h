@@ -38,6 +38,14 @@ public:
         m_simplex.clear();
     }
 
+    void reverse() {
+        std::reverse(m_simplex.begin(), m_simplex.end());
+    }
+
+    void printSimplex() {
+        for(auto& i : m_simplex) i.printV();
+    }
+
     bool containsOrigin(Vector3& dir){
         if(m_simplex.size() == 2){ // line segment
             Vector3 A = m_simplex[1];

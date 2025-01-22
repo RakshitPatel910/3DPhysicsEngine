@@ -80,6 +80,18 @@ public:
         );
     }
 
+    Matrix4 fromGlm(const glm::mat4& glmMat) {
+        Matrix4 mat;
+        
+        // Copy the values from the glm::mat4 into the m array
+        mat.m[0]  = glmMat[0][0]; mat.m[1]  = glmMat[0][1]; mat.m[2]  = glmMat[0][2]; mat.m[3]  = glmMat[0][3];
+        mat.m[4]  = glmMat[1][0]; mat.m[5]  = glmMat[1][1]; mat.m[6]  = glmMat[1][2]; mat.m[7]  = glmMat[1][3];
+        mat.m[8]  = glmMat[2][0]; mat.m[9]  = glmMat[2][1]; mat.m[10] = glmMat[2][2]; mat.m[11] = glmMat[2][3];
+        mat.m[12] = glmMat[3][0]; mat.m[13] = glmMat[3][1]; mat.m[14] = glmMat[3][2]; mat.m[15] = glmMat[3][3];
+        
+        return mat;
+    }
+
     Eigen::Matrix3f toEigenMatrix3f() const {
         Eigen::Matrix3f result;
 

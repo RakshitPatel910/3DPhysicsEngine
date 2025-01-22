@@ -3,7 +3,7 @@
 #include "Vector3.h"
 #include "RigidBody.h"
 #include "Collider.h"
-#include "ContactConstraint.cpp"
+#include "ContactConstraint.h"
 
 void calcJacobian(){
     Vector3 contactNormal = contactData->contactNormal;

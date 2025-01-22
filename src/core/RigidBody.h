@@ -67,7 +67,7 @@ public:
         Vector3 torque = Vector3(),
         Quaternion q = Quaternion(),
         // Matrix4 tr_mat = Matrix4()
-    ) : shape(shape), pos(pos), v(v), m_name(m_name), ang_v(ang_v), force(force), torque(torque), q(q), tr_mat(tr_mat) {
+    ) : shape(shape), pos(pos), v(v), m_name(m_name), ang_v(ang_v), force(force), torque(torque), q(q) {
         updateInertiaTensor();
         updateTransform();
     }
