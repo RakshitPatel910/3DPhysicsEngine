@@ -82,68 +82,123 @@ public:
         return crossProductMagnitude < k_eps || std::abs(triangle.dist) < k_eps;
     }
 
-    void UpdatePolytope(const Vector3& supportPoint){
-        // adding supportPoint to vertexList
-        bool pointExists = false;
-        for (const Vector3& v : polytope.vertexList) {
-            if ( v == supportPoint ) {
-                pointExists = true;
-                break;
-            }
-        }
-        if (!pointExists) {
-            polytope.vertexList.push_back(supportPoint);
-        }
+    // void UpdatePolytope(const Vector3& supportPoint){
+    //     // adding supportPoint to vertexList
+    //     bool pointExists = false;
+    //     for (const Vector3& v : polytope.vertexList) {
+    //         if ( v == supportPoint ) {
+    //             pointExists = true;
+    //             break;
+    //         }
+    //     }
+    //     if (!pointExists) {
+    //         polytope.vertexList.push_back(supportPoint);
+    //     }
 
-        polytope.edgeList.clear();
+    //     polytope.edgeList.clear();
 
-        for( size_t i = 0; i < polytope.triangleList.size(); ){
-            Triangle& triangle = polytope.triangleList[i];
+    //     for( size_t i = 0; i < polytope.triangleList.size(); ){
+    //         Triangle& triangle = polytope.triangleList[i];
 
-            // Skip degenerate triangles
-            if (IsDegenerate(triangle)) {
-                polytope.triangleList.erase(polytope.triangleList.begin() + i); // Remove degenerate triangle
-                // i--; // Adjust the index as the list shrinks
+    //         // Skip degenerate triangles
+    //         if (IsDegenerate(triangle)) {
+    //             polytope.triangleList.erase(polytope.triangleList.begin() + i); // Remove degenerate triangle
+    //             // i--; // Adjust the index as the list shrinks
                 
+    //             continue;
+    //         }
+
+    //         // adding all edges of visible triangle;
+    //         if(triangle.normal.dot(supportPoint - triangle.vertices[0]) > 0.0f){ // normal of triangle points towards supportPoint (i.e. triangle visible from supportPoint)
+    //             polytope.edgeList.emplace_back(triangle.vertices[0], triangle.vertices[1]);
+    //             polytope.edgeList.emplace_back(triangle.vertices[1], triangle.vertices[2]);
+    //             polytope.edgeList.emplace_back(triangle.vertices[2], triangle.vertices[0]);
+
+    //             polytope.triangleList.erase(polytope.triangleList.begin() + i);
+    //             continue;
+    //         }
+    //         i++;
+    //     }
+
+    //     // removing reoccuring edges, (a, b) and (b, a) both exist ==> remove both
+    //     for( size_t i = 0; i < polytope.edgeList.size(); i++ ){
+    //         auto [a, b] = polytope.edgeList[i];
+    //         auto it = std::find(polytope.edgeList.begin(), polytope.edgeList.end(), std::make_pair(b, a));
+
+    //         if( it != polytope.edgeList.end() ){
+    //             polytope.edgeList.erase(it);
+    //             polytope.edgeList.erase(polytope.edgeList.begin() + i);
+
+    //             i--;
+    //         }
+    //     }
+
+    //     for( const auto& [a, b] : polytope.edgeList){
+
+    //         // Triangle newTriangle = Triangle(a, b, polytope.vertexList[polytope.edgeList.size()]);
+    //         Triangle newTriangle = Triangle(polytope.vertexList.back(), a, b);
+    //         polytope.triangleList.push_back(newTriangle);
+    //     }
+
+    //     polytope.edgeList.clear();
+    // }
+
+    void AddEdge2(std::vector<std::pair<Vector3, Vector3>>& aEdgeList, const Vector3& a, const Vector3& b)
+    {
+        for (auto iterator = aEdgeList.begin(); iterator != aEdgeList.end(); ++iterator)
+        {
+            if (iterator->first == b && iterator->second == a)
+            {
+                // Encountered the same edge with opposite winding, remove it and don't add a new one
+                aEdgeList.erase(iterator);
+                return;
+            }
+        }
+        aEdgeList.push_back({a, b});
+    }
+
+    inline void BarycentricProjection(const Vector3& aPoint, Vector3& a, Vector3& b, Vector3& c, float& u, float& v, float& w)
+    {
+        glm::vec3 v0 = b - a, v1 = c - a, v2 = aPoint - a;
+        float d00 = glm::dot(v0, v0);
+        float d01 = glm::dot(v0, v1);
+        float d11 = glm::dot(v1, v1);
+        float d20 = glm::dot(v2, v0);
+        float d21 = glm::dot(v2, v1);
+        float denom = d00 * d11 - d01 * d01;
+        v = (d11 * d20 - d01 * d21) / denom;
+        w = (d00 * d21 - d01 * d20) / denom;
+        u = 1.0f - v - w;
+    }
+
+    // Correct update polytop function
+    void UpdatePolytope(const Vector3& supportPoint) {
+
+        for(auto it = polytope.triangleList.begin(); it != polytope.triangleList.end(); ) {
+
+            Vector3 planeVec = supportPoint - it->vertices[0];
+
+            if( it->normal.dot(planeVec) > 0.0f ){
+                AddEdge2(polytope.edgeList, it->vertices[0], it->vertices[1]);
+                AddEdge2(polytope.edgeList, it->vertices[1], it->vertices[2]);
+                AddEdge2(polytope.edgeList, it->vertices[2], it->vertices[0]);
+
+                it = polytope.triangleList.erase(it);
                 continue;
             }
-
-            // adding all edges of visible triangle;
-            if(triangle.normal.dot(supportPoint - triangle.vertices[0]) > 0.0f){ // normal of triangle points towards supportPoint (i.e. triangle visible from supportPoint)
-                polytope.edgeList.emplace_back(triangle.vertices[0], triangle.vertices[1]);
-                polytope.edgeList.emplace_back(triangle.vertices[1], triangle.vertices[2]);
-                polytope.edgeList.emplace_back(triangle.vertices[2], triangle.vertices[0]);
-
-                polytope.triangleList.erase(polytope.triangleList.begin() + i);
-                continue;
-            }
-            i++;
+            it++;
         }
 
-        // removing reoccuring edges, (a, b) and (b, a) both exist ==> remove both
-        for( size_t i = 0; i < polytope.edgeList.size(); i++ ){
-            auto [a, b] = polytope.edgeList[i];
-            auto it = std::find(polytope.edgeList.begin(), polytope.edgeList.end(), std::make_pair(b, a));
+        for(auto it = polytope.edgeList.begin(); it != polytope.edgeList.end(); it++) {
+            polytope.triangleList.emplace_back(Triangle(supportPoint, it->first, it->second));
 
-            if( it != polytope.edgeList.end() ){
-                polytope.edgeList.erase(it);
-                polytope.edgeList.erase(polytope.edgeList.begin() + i);
-
-                i--;
-            }
-        }
-
-        for( const auto& [a, b] : polytope.edgeList){
-
-            // Triangle newTriangle = Triangle(a, b, polytope.vertexList[polytope.edgeList.size()]);
-            Triangle newTriangle = Triangle(polytope.vertexList.back(), a, b);
-            polytope.triangleList.push_back(newTriangle);
+            Triangle newTriangle = Triangle(supportPoint, it->first, it->second);
         }
 
         polytope.edgeList.clear();
     }
 
-    ContactData RunEPA(const Simplex& simplex, const Shape& shapeA, const Shape& shapeB){
+    ContactData RunEPA(const Simplex& simplex, const Shape& shapeA, const Shape& shapeB, Collider& colA, Collider& colB){
         polytope.clear();
         polytope.vertexList.assign(simplex.getSimplex().begin(), simplex.getSimplex().begin() + 4);
 
@@ -165,27 +220,38 @@ public:
 
             // finding closest triangle to origin
             for( Triangle& triangle : polytope.triangleList ){
-                if( triangle.dist < minDist ){
+                if( std::fabs(triangle.dist) < minDist ){
                     closestTriangle = &triangle;
                     minDist = triangle.dist;
                 }
             }
 
-            Vector3 supportPoint = shapeA.Support(closestTriangle->normal) - shapeB.Support(-(closestTriangle->normal));
+            // Vector3 supportPoint = shapeA.Support(closestTriangle->normal) - shapeB.Support(-(closestTriangle->normal));
+            Vector3 supportPoint = colA.Support(closestTriangle->normal) - colB.Support(closestTriangle->normal * -1);
 
-            if( (closestTriangle->normal).dot(supportPoint) < k_eps || iter++ >= max_iter ){
+            if( std::fabs((closestTriangle->normal).dot(supportPoint) - minDist) < k_eps || iter++ >= max_iter ){
                 ContactData contactData;
 
-                contactData.worldContactPointA = supportPoint;
-                contactData.worldContactPointB = supportPoint;
+                const float distanceFromOrigin = (closestTriangle->normal).dot(closestTriangle->vertices[0]);
 
-                Vector3 zeroVec = Vector3();
-                if( closestTriangle->normal == zeroVec ){
-                    contactData.contactNormal = supportPoint.normalized();
-                }
-                else {
-                    contactData.contactNormal = closestTriangle->normal;
-                }
+	            float bary_u, bary_v, bary_w;
+
+                BarycentricProjection(closestTriangle->normal * distanceFromOrigin, closestTriangle->vertices[0], closestTriangle->vertices[1], closestTriangle->vertices[2], bary_u, bary_v, bary_w);
+
+                // if (fabs(bary_u) > 1.0f || fabs(bary_v) > 1.0f || fabs(bary_w) > 1.0f)
+                //     return false;
+                // if (!IsValid(bary_u) || !IsValid(bary_v) || !IsValid(bary_w))
+                //     return false;
+
+                Vector3 supportLocal1 = closestTriangle->vertices[0];
+                Vector3 supportLocal2 = closestTriangle->vertices[1];
+                Vector3 supportLocal3 = closestTriangle->vertices[2];
+
+                contactData.worldContactPointA =  (supportLocal1 * bary_u) + (supportLocal2 * bary_v) + (supportLocal3 * bary_w);
+                contactData.worldContactPointB =  (supportLocal1 * bary_u) + (supportLocal2 * bary_v) + (supportLocal3 * bary_w);
+
+                contactData.contactNormal = (closestTriangle->normal).normalized();
+                // contactData.contactNormal = closestTriangle->normal;
 
                 if (contactData.contactNormal.getX() >= 0.57735f) {
                     contactData.contactTangent1 = Vector3(contactData.contactNormal.getY(), -contactData.contactNormal.getX(), 0.0f).normalized();
@@ -195,7 +261,11 @@ public:
                 }
                 contactData.contactTangent2 = contactData.contactNormal.cross(contactData.contactTangent1);
 
-                contactData.penetrationDepth = minDist;
+                Vector3 Pa = colA.Support(contactData.contactNormal);
+                Vector3 Pb = colB.Support(-contactData.contactNormal);
+
+                // contactData.penetrationDepth = minDist;
+                contactData.penetrationDepth = (std::abs(Pa.dot(contactData.contactNormal)) - std::abs(Pb.dot(contactData.contactNormal)));
 
                 return contactData;
             }

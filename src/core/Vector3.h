@@ -4,9 +4,9 @@
 
 class Vector3
 {
-private:
-    float x, y, z;
+// private:
 public:
+    float x, y, z;
     Vector3(): x(0), y(0), z(0) {}
 
     Vector3(float x, float y, float z): x(x), y(y), z(z) {}
@@ -50,9 +50,19 @@ public:
         return (x == other.x) && (y == other.y) && (z == other.z);
     }
 
+    // Vector3 -> glm::vec3 conversion constructor
+    operator glm::vec3() const {
+        return glm::vec3(x, y, z);
+    }
+
     float getX() const { return x; }
     float getY() const { return y; }
     float getZ() const { return z; }
+
+    // glm::vec3 -> Vector3 conversion constructor
+    static Vector3 fromGlmVec3(const glm::vec3& vec) {
+        return Vector3(vec.x, vec.y, vec.z);
+    }
 
     void printV() const {
         std::cout << x << ", " << y << ", " << z << '\n';
@@ -60,6 +70,10 @@ public:
 
     float dot(const Vector3& b) const {
         return x * b.x + y * b.y + z * b.z;
+
+        // glm::vec3 v = b;
+        // glm::vec3 u = *this;
+        // return glm::dot(u, v);
     }
 
     Vector3 cross(const Vector3& b) const {
@@ -68,6 +82,11 @@ public:
             z * b.x - x * b.z,
             x * b.y - y * b.x
         );
+
+        // glm::vec3 v = b;
+        // glm::vec3 u = *this;
+
+        // return fromGlmVec3(glm::cross(u, v));
     }
 
     float length() const { // Norm2

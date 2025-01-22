@@ -44,16 +44,16 @@ public:
     // const float PI_3 = PI / 3.0f;             
 
 
-    bool isIntersecting(Simplex& simplex, const Shape& shapeA, const Shape& shapeB){
+    bool isIntersecting(Simplex& simplex, const Shape& shapeA, const Shape& shapeB, Collider& colA, Collider& colB){
         // Simplex simplex;
 
         Vector3 direction = Vector3(1, 0, 0); // initial direction
 
-        Vector3 support = shapeA.Support(direction) - shapeB.Support(-direction);
+        Vector3 support = colA.Support(direction) - colB.Support(-direction);
 
         if(direction.dot(support) >= support.length() * 0.8f){ // stability check
             direction = Vector3(0, 1, 0);
-            support = shapeA.Support(direction) - shapeB.Support(-direction);
+            support = colA.Support(direction) - colB.Support(-direction);
         }
         
         simplex.addPoint(support);
@@ -61,7 +61,7 @@ public:
         direction = -direction;
 
         while (true) {
-            support = shapeA.Support(direction) - shapeB.Support(-direction);
+            support = colA.Support(direction) - colB.Support(-direction);
 
             if(support.dot(direction) <= 0.0f){ // no collision
                 return false;
@@ -70,7 +70,7 @@ public:
             simplex.addPoint(support);
 
             if(simplex.containsOrigin(direction)){ // collision
-                simplexToTetrahedron(simplex, shapeA, shapeB);
+                simplexToTetrahedron(simplex, shapeA, shapeB, colA, colB);
 
                 return true;
             }
@@ -79,7 +79,7 @@ public:
     }
 
     // void simplexToTetrahedron(Simplex& simplex, Simplex& simplexA, Simplex& simplexB, const Shape& shapeA, const Shape& shapeB){
-    void simplexToTetrahedron(Simplex& simplex, const Shape& shapeA, const Shape& shapeB){
+    void simplexToTetrahedron(Simplex& simplex, const Shape& shapeA, const Shape& shapeB, Collider& colA, Collider& colB){
         static const Vector3 k_dir[] = {
             Vector3(1.0f, 0.0f, 0.0f),
             Vector3(-1.0f, 0.0f, 0.0f),
@@ -104,7 +104,7 @@ public:
         {
             case 1:
                 for( const Vector3& dir : k_dir ){
-                    simplex[1] = shapeA.Support(dir) - shapeB.Support(-dir);
+                    simplex[1] = colA.Support(dir) - colB.Support(-dir);
 
                     if( (simplex[1] - simplex[0]).lengthSq() >= k_epsSq ){ // if far enough
                         break;
@@ -121,7 +121,7 @@ public:
                 rMat = Matrix4::getRotationMatrixByAngleOnAxis(60, line); // matrix to rotate by 60
 
                 for( int i = 0; i < 6; i++ ){
-                    simplex[2] = shapeA.Support(dir) - shapeB.Support(-dir);
+                    simplex[2] = colA.Support(dir) - colB.Support(-dir);
 
                     if( simplex[2].lengthSq() >= k_epsSq ){
                         break;
@@ -138,11 +138,11 @@ public:
                 // Vector3 dir = v01.cross(v02);
                 dir = v01.cross(v02);
 
-                simplex[3] = shapeA.Support(dir) - shapeB.Support(-dir);
+                simplex[3] = colA.Support(dir) - colB.Support(-dir);
 
                 if( simplex[3].lengthSq() < k_epsSq ){ // if not far enough
                     dir.negate();
-                    simplex[3] = shapeA.Support(dir) - shapeB.Support(-dir);
+                    simplex[3] = colA.Support(dir) - colB.Support(-dir);
                 }
         }
 
