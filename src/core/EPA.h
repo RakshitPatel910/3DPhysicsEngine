@@ -45,8 +45,8 @@ struct ContactData
     Vector3 worldContactPointA;
     Vector3 worldContactPointB;
 
-    // Vector3 localContactPointA;
-    // Vector3 localContactPointB;
+    Vector3 localContactPointA;
+    Vector3 localContactPointB;
 
     Vector3 contactNormal;
     Vector3 contactTangent1;
@@ -58,7 +58,12 @@ struct ContactData
     float tangent1ImpulseSum;
     float tangent2ImpulseSum;
 
-    ContactData() : normalImpulseSum(0.0f), tangent1ImpulseSum(0.0f), tangent2ImpulseSum(0.0f) {}
+    bool isPersistent;
+
+    ContactData() : normalImpulseSum(0.0f), tangent1ImpulseSum(0.0f), tangent2ImpulseSum(0.0f) 
+    { 
+        isPersistent = false; 
+    }
 };
 
 class EPA
