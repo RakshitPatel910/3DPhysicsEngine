@@ -44,7 +44,8 @@ public:
     // const float PI_3 = PI / 3.0f;             
 
 
-    bool isIntersecting(Simplex& simplex, const Shape& shapeA, const Shape& shapeB, Collider& colA, Collider& colB){
+    // bool isIntersecting(Simplex& simplex, const Shape& shapeA, const Shape& shapeB, Collider& colA, Collider& colB){
+    bool isIntersecting(Simplex& simplex, Collider& colA, Collider& colB){
         // Simplex simplex;
 
         Vector3 direction = Vector3(1, 0, 0); // initial direction
@@ -70,7 +71,8 @@ public:
             simplex.addPoint(support);
 
             if(simplex.containsOrigin(direction)){ // collision
-                simplexToTetrahedron(simplex, shapeA, shapeB, colA, colB);
+                // simplexToTetrahedron(simplex, shapeA, shapeB, colA, colB);
+                simplexToTetrahedron(simplex, colA, colB);
 
                 return true;
             }
@@ -79,7 +81,8 @@ public:
     }
 
     // void simplexToTetrahedron(Simplex& simplex, Simplex& simplexA, Simplex& simplexB, const Shape& shapeA, const Shape& shapeB){
-    void simplexToTetrahedron(Simplex& simplex, const Shape& shapeA, const Shape& shapeB, Collider& colA, Collider& colB){
+    // void simplexToTetrahedron(Simplex& simplex, const Shape& shapeA, const Shape& shapeB, Collider& colA, Collider& colB){
+    void simplexToTetrahedron(Simplex& simplex, Collider& colA, Collider& colB){
         static const Vector3 k_dir[] = {
             Vector3(1.0f, 0.0f, 0.0f),
             Vector3(-1.0f, 0.0f, 0.0f),

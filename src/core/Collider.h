@@ -3,6 +3,7 @@
 #include "Vector3.h"
 #include "Matrix4.h"
 #include "RigidBody.h"
+#include "AABB.h"
 #include "./shape/Shape.h"
 
 class Collider
@@ -20,6 +21,8 @@ public:
     RigidBody* m_body;
     Shape* m_shape;
     ColliderType m_colliderType;
+    AABB m_aabb;
+
 
     Collider(
         float mass, 
@@ -35,12 +38,17 @@ public:
         m_body(body), 
         m_shape(shape), 
         m_colliderType(colliderType) 
-    {}
+    {
+        // Generate an AABB for this Collider
+
+    }
 
 
     RigidBody* getRigidBody() const {
         return m_body;
     }
+
+    
 
     Vector3 Support(const Vector3& dir) const {
         // return m_shape->Support(dir);

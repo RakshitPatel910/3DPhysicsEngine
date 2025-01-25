@@ -203,7 +203,8 @@ public:
         polytope.edgeList.clear();
     }
 
-    ContactData RunEPA(const Simplex& simplex, const Shape& shapeA, const Shape& shapeB, Collider& colA, Collider& colB){
+    // ContactData RunEPA(const Simplex& simplex, const Shape& shapeA, const Shape& shapeB, Collider& colA, Collider& colB){
+    ContactData RunEPA(const Simplex& simplex, Collider& colA, Collider& colB){
         polytope.clear();
         polytope.vertexList.assign(simplex.getSimplex().begin(), simplex.getSimplex().begin() + 4);
 

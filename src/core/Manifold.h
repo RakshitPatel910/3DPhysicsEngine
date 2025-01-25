@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <limits>
 #include <vector>
 
 #include "Collider.h"
@@ -152,7 +154,7 @@ private:
     }
 
     bool IsInsideTriangle(const Vector3& point, const Vector3& A, const Vector3& B, const Vector3& C) {
-         Vector3 v0 = b - a;
+        Vector3 v0 = b - a;
         Vector3 v1 = c - a;
         Vector3 v2 = point - a;
 
