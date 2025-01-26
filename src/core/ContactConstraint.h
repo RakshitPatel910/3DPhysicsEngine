@@ -14,7 +14,7 @@ public:
 
     virtual void calcJacobian() override;
     virtual void solveConstraint(
-        float time,
-        std::shared_ptr<ContactData> contact
+        float time
+        // std::shared_ptr<ContactData> contact
     ) override;
 };

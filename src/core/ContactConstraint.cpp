@@ -16,9 +16,9 @@ void ContactConstraint::calcJacobian(){
     Vector3 rotMotionA = motionA.cross(contactNormal);
     Vector3 rotMotionB = motionB.cross(contactNormal);
 
-    Eigen::Matrix<float, 1, 3> Ja;
+    Eigen::Matrix<float, 1, 6> Ja;
     Ja << -contactNormal.getX(), -contactNormal.getY(), -contactNormal.getZ(), -rotMotionA.getX(), -rotMotionA.getY(), -rotMotionA.getZ();
-    Eigen::Matrix<float, 1, 3> Jb;
+    Eigen::Matrix<float, 1, 6> Jb;
     Jb << contactNormal.getX(), contactNormal.getY(), contactNormal.getZ(), rotMotionB.getX(), rotMotionB.getY(), rotMotionB.getZ();
 
     if( colliderA->m_colliderType == Collider::ColliderType::STATIC ){
@@ -36,7 +36,8 @@ void ContactConstraint::calcJacobian(){
     effectiveMass = J * Minv_Jtr;
 }
 
-void ContactConstraint::solveConstraint(float time, std::shared_ptr<ContactData> contact){
+// void ContactConstraint::solveConstraint(float time, std::shared_ptr<ContactData> contact){
+void ContactConstraint::solveConstraint(float time){
     Collider* collA = colliderA;
     Collider* collB = colliderB;
 
@@ -75,4 +76,9 @@ void ContactConstraint::solveConstraint(float time, std::shared_ptr<ContactData>
     Wa = Wa - Vector3(delta_V(3, 0), delta_V(4, 0), delta_V(5, 0));
     Vb = Vb + Vector3(delta_V(6, 0), delta_V(7, 0), delta_V(8, 0));
     Wb = Wb + Vector3(delta_V(9, 0), delta_V(10, 0), delta_V(11, 0));
+
+    collA->m_body->v = Va;
+    collA->m_body->ang_v = Wa;
+    collB->m_body->v = Vb;
+    collB->m_body->ang_v = Wb;
 }

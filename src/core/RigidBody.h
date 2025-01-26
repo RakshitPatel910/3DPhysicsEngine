@@ -175,7 +175,7 @@ public:
         force = Vector3();
         torque = Vector3();
 
-        updateTransform();
+        updateTransform(); //updateTransform() recalculates the transformation matrix every frame. If you don't use it frequently, consider deferring this calculation until explicitly required (e.g., during rendering or collision detection).
     }
 
 };

@@ -34,8 +34,8 @@ public:
     virtual void calcJacobian() = 0;
     // virtual float solveConstraint(
     virtual void solveConstraint(
-        float time,
-        std::shared_ptr<ContactData> contactData
+        float time
+        // std::shared_ptr<ContactData> contactData
     ) = 0;
 };
 
