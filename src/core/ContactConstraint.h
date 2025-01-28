@@ -13,7 +13,7 @@ public:
     ContactConstraint(Collider* colliderA, Collider* colliderB) : Constraint(colliderA, colliderB) {}
 
     virtual void calcJacobian() override;
-    virtual void solveConstraint(
+    virtual float solveConstraint(
         float time
         // std::shared_ptr<ContactData> contact
     ) override;

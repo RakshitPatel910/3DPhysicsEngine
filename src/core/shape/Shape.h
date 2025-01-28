@@ -1,9 +1,13 @@
 #pragma once
 
 #include "../Vector3.h"
+#include "../Mesh.h"
 
 class Shape
 {
+private:
+    Mesh* mesh;
+    
 public:
     virtual ~Shape() {}
     virtual Vector3 Support(const Vector3& dir) const = 0;
@@ -39,4 +43,9 @@ public:
 
         return m_center + vec;
     }
+};
+
+class MeshShape : public Shape
+{
+
 };

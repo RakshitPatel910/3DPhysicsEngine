@@ -37,7 +37,7 @@ void ContactConstraint::calcJacobian(){
 }
 
 // void ContactConstraint::solveConstraint(float time, std::shared_ptr<ContactData> contact){
-void ContactConstraint::solveConstraint(float time){
+float ContactConstraint::solveConstraint(float time){
     Collider* collA = colliderA;
     Collider* collB = colliderB;
 
@@ -70,7 +70,7 @@ void ContactConstraint::solveConstraint(float time){
 
     lambda = impulseSum - oldImpulseSum;
 
-    Eigen::Matrix<float, 12, 1> delta_V = Minv_Jtr * lambda;
+    Eigen::Matrix<float, 12, 1> delta_V = Minv_Jtr * lambda; // Catto_A
 
     Va = Va - Vector3(delta_V(0, 0), delta_V(1, 0), delta_V(2, 0));
     Wa = Wa - Vector3(delta_V(3, 0), delta_V(4, 0), delta_V(5, 0));
@@ -81,4 +81,6 @@ void ContactConstraint::solveConstraint(float time){
     collA->m_body->ang_v = Wa;
     collB->m_body->v = Vb;
     collB->m_body->ang_v = Wb;
+
+    return lambda;
 }

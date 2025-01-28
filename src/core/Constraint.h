@@ -18,7 +18,7 @@ public:
 
     Eigen::Matrix<float, 1, 12> J; // Jacobian ==> has Va Wa Vb Wb
     Eigen::Matrix<float, 12, 12> M_inv; // Inverse Mass Matrix
-    Eigen::Matrix<float, 12, 1> Minv_Jtr; // M^-1 * J^T
+    Eigen::Matrix<float, 12, 1> Minv_Jtr; // M^-1 * J^T // Catto_B
 
     float effectiveMass;
 
@@ -32,8 +32,8 @@ public:
     void calcInverseMassMatrix();
 
     virtual void calcJacobian() = 0;
-    // virtual float solveConstraint(
-    virtual void solveConstraint(
+    virtual float solveConstraint(
+    // virtual void solveConstraint(
         float time
         // std::shared_ptr<ContactData> contactData
     ) = 0;

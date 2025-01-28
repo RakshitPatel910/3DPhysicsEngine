@@ -3,6 +3,8 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <unordered_map>
+#include <Eigen/Dense>
 
 #include "RigidBody.h"
 #include "Collider.h"
@@ -32,6 +34,22 @@ public:
     void addRigidBody(std::shared_ptr<RigidBody> rbody){
         rigidBodies.push_back(rbody);
     }
+
+    // void SolveConstraints(){
+    //     if( constraints.size() == 0 ) return;
+        
+    //     std::unordered_map<Collider*,  Eigen::Matrix<float, 6, 1>> delta_V_cache;
+    //     // delta_V_cache.reserve(colliderMap.size());
+
+    //     for( auto cm : colliderMap ){
+    //         if( delta_V_cache.find(cm.second) != delta_V_cache.end() ){
+    //             delta_V_cache[cm.second] = Eigen::Matrix<float, 6, 1>();
+    //             delta_V_cache[cm.second].setZero();
+    //         }
+    //     }
+
+        
+    // }
 
     void simulate(){
         // Integrate forces for all rigid bodies
