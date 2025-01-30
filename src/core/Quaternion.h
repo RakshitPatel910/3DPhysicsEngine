@@ -103,6 +103,20 @@ public:
         return mat;
     }
 
+    Vector3 rotateVec(const Vector3& vec) const {
+        Quaternion p(0, v.x, v.y, v.z);
+        Quaternion q_conj = conjugate();
+        Quaternion rotated = (*this * p) * q_conj;
 
+        return Vector3(rotated.x, rotated.y, rotated.z);
+    }
+
+    static Quaternion fromEuler(float yaw, float pitch, float roll) {
+        Quaternion qy(yaw, Vector3(0.0f, 1.0f, 0.0f));
+        Quaternion qp(pitch, Vector3(1.0f, 0.0f, 0.0f));
+        Quaternion qr(roll, Vector3(0.0f, 0.0f, 1.0f));
+
+        return qy * qp * qr;
+    }   
 };
 
