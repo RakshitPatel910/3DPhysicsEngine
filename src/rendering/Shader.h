@@ -59,7 +59,7 @@ public:
     Shader() = default;
 
     Shader(const std::string& vertPath, const std::string& fragPath) {
-
+        load(vertPath, fragPath);
     }
 
     ~Shader(){
