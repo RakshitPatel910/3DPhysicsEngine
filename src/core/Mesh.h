@@ -7,6 +7,7 @@
 
 #include "Vector3.h"
 
+// ! for better performance, change this to single buffer, instead of three different buffers
 class Mesh
 {
 // private:
