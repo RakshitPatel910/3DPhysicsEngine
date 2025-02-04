@@ -53,7 +53,8 @@ public:
         return mat;
     }
 
-     Matrix4 inverse() const {
+    // ! This inverse implementation might be wrong!!! (like 95% sure it is wrong)
+    Matrix4 inverse() const {
         Matrix4 L, U;
         Matrix4 inverseMat;
 
@@ -122,7 +123,7 @@ public:
         return mat;
     }
 
-    static Matrix4 getScalingMAtrix(const Vector3& sVec){
+    static Matrix4 getScalingMatrix(const Vector3& sVec){
         Matrix4 mat;
 
         mat.m[0] = sVec.getX();

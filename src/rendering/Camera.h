@@ -47,6 +47,12 @@ public:
         return view;
     }
 
+    glm::mat4 getProjectionMatrix() const {
+        // return glm::perspective(
+
+        // ); //TODO: complete this
+    }
+
     void processMovement(const Vector& dir, float dt) {
         Vector3 velocity = dir * (moveSpeed * dt);
 

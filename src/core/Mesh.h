@@ -37,6 +37,10 @@ public:
         glDeleteVertexArrays(1, &VAO);
     }
 
+    GLuint getVAO() const {
+        return VAO;
+    }
+
     void setBuffers() {
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
@@ -77,6 +81,13 @@ public:
         glUseProgram(shaderProgram);
 
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+        glBindVertexArray(0);
+    }
+
+    void drawInstanced(unsigned int instCount) const {
+        glBindVertexArray(VAO);
+        glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, instCount);
 
         glBindVertexArray(0);
     }
