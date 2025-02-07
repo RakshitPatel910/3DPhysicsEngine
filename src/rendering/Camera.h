@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <glm/glm.hpp>
 
 #include "../core/Vector3.h"
@@ -9,9 +10,9 @@ class Camera
 {
 public:
     Vector3 pos = Vector3(0.0f, 0.0f, 3.0f);
-    Quaternion orientation;
+    Quaternion orientation = Quaternion();
 
-    float fov = 60.0f // Field of View
+    float fov = 60.0f; // Field of View
     float moveSpeed = 5.0f;
     float sensitivity = 0.1f;
 
@@ -32,44 +33,44 @@ public:
     }
 
     glm::mat4 getViewMatrix() const {
-        Vector3 f = front();
-        Vector3 r = right();
-        Vector3 u = up();
-    
-        glm::mat4 view(1.0f);
-        view[0][0] = r.x; view[1][0] = r.y; view[2][0] = r.z;
-        view[0][1] = u.x; view[1][1] = u.y; view[2][1] = u.z;
-        view[0][2] = -f.x; view[1][2] = -f.y; view[2][2] = -f.z;
-        view[3][0] = -r.dot(position);
-        view[3][1] = -u.dot(position);
-        view[3][2] = -f.dot(position);
-
-        return view;
+        return glm::lookAt(
+            glm::vec3(pos),
+            glm::vec3(pos + front()),
+            glm::vec3(up())
+        );
     }
 
-    glm::mat4 getProjectionMatrix() const {
-        // return glm::perspective(
+    glm::mat4 getProjectionMatrix(float aspectRatio) const {
+        // // return glm::perspective(
 
-        // ); //TODO: complete this
+        // // ); //TODO: complete this
+        // return glm::mat4();
+        return glm::perspective(
+            glm::radians(fov),
+            aspectRatio,
+            0.1f,
+            100.0f
+        );
     }
 
-    void processMovement(const Vector& dir, float dt) {
-        Vector3 velocity = dir * (moveSpeed * dt);
-
-        pos += front() * velocity.z;
-        pos += right() * velocity.x;
-        pos += up() * velocity.y;
+    void processMovement(const Vector3& dir, float dt) {
+        Vector3 velocity = dir * (this->moveSpeed * dt);
+        
+        // pos += front() * velocity.z;
+        // pos += right() * velocity.x;
+        // pos += up() * velocity.y;
+        pos.printV();
     }
 
     void processLook(float x_offset, float y_offset) {
-        x_offset *= sensitivity;
-        y_offset *= sensitivity;
+        // x_offset *= sensitivity;
+        // y_offset *= sensitivity;
 
-        Quaternion yawRotationQ(x_offset, Vector3(0.0f, 1.0f, 0.0f)); // Global Y-axis
-        Quaternion pitchRotationQ(y_offset, right()); // Local Right-axis
+        // Quaternion yawRotationQ(x_offset, Vector3(0.0f, 1.0f, 0.0f)); // Global Y-axis
+        // Quaternion pitchRotationQ(y_offset, right()); // Local Right-axis
 
-        orientation = yawRotationQ * orientation * pitchRotationQ; // NewOrientation = ΔYawGlobal × CurrentOrientation × ΔPitchLocal
-        orientation.normalize();
+        // orientation = yawRotationQ * orientation * pitchRotationQ; // NewOrientation = ΔYawGlobal × CurrentOrientation × ΔPitchLocal
+        // orientation.normalize();
     }
 
 };

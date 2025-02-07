@@ -1,7 +1,9 @@
 #pragma once
 
+#include <iostream>
 #include <vector>
-#include <GL/glew.h>
+// #include <GL/glew.h>
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 
 
@@ -27,7 +29,7 @@ public:
     Mesh(const std::vector<Vector3>& vertices, const std::vector<Vector3>& normals, const std::vector<unsigned int>& indices)
         : vertices(vertices), normals(normals), indices(indices) 
     {
-        setupBuffers();
+        setBuffers();
     }
 
     ~Mesh() {
@@ -56,7 +58,7 @@ public:
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, glmVer.size() * sizeof(glm::vec3), glmVer, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, glmVer.size() * sizeof(glm::vec3), glmVer.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (GLvoid*)0);
         glEnableVertexAttribArray(0);
 
@@ -67,18 +69,20 @@ public:
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, normalBufffer);
-        glBufferData(GL_ARRAY_BUFFER, glmNorm.size() * sizeof(glm::vec3), glmNorm, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, glmNorm.size() * sizeof(glm::vec3), glmNorm.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (GLvoid*)0);
         glEnableVertexAttribArray(1);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
     }
 
-    void draw(GLuint shaderProgram) {
+    // void draw(GLuint shaderProgram) {
+    void draw() const {
         glBindVertexArray(VAO);
 
-        glUseProgram(shaderProgram);
+        // std::cout << VAO << '\n';
+        // glUseProgram(shaderProgram);
 
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 

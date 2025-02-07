@@ -38,7 +38,8 @@ public:
 
 class RigidBody
 {
-private:
+// private:
+public:
     BoxShape shape;
 
     Vector3 pos;
@@ -130,7 +131,7 @@ public:
     void updateTransform(){
         Matrix4 translationMat = Matrix4::getTranslationMatrix(pos);
         Matrix4 rotationMat = q.toMatrix4();
-        Matrix4 scalingMat = Matrix4::getScalingMAtrix(Vector3(shape.width, shape.height, shape.depth));
+        Matrix4 scalingMat = Matrix4::getScalingMatrix(Vector3(shape.width, shape.height, shape.depth));
 
         // tr_mat = translationMat * rotationMat * scalingMat;
         tr_mat = scalingMat * rotationMat * translationMat;

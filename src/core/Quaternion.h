@@ -104,7 +104,7 @@ public:
     }
 
     Vector3 rotateVec(const Vector3& vec) const {
-        Quaternion p(0, v.x, v.y, v.z);
+        Quaternion p(0, vec.x, vec.y, vec.z);
         Quaternion q_conj = conjugate();
         Quaternion rotated = (*this * p) * q_conj;
 

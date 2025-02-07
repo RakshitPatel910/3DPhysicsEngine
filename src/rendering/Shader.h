@@ -2,9 +2,11 @@
 
 #include <iostream>
 #include <fstream>
-#include <glm/glm.hpp>
+#include <sstream>
+#include <filesystem>
 #include <string>
 #include <unordered_map>
+#include <glm/glm.hpp>
 
 class Shader
 {
@@ -14,7 +16,7 @@ private:
 
     GLint getLocation(const std::string& name) {
         if(unifomCache.find(name) == unifomCache.end()){
-            unifomCache[name] = glGetUniformLocation(id, name,c_str());
+            unifomCache[name] = glGetUniformLocation(id, name.c_str());
         }
 
         return unifomCache[name];
@@ -23,8 +25,10 @@ private:
     std::string readFile(const std::string& filePath) {
         std::ifstream file(filePath);
 
+        // std::cout << std::filesystem::current_path() << '\n';
+
         if(!file.is_open()){
-            std::cerr << "Failed to open shader file: " << path << std::endl;
+            std::cerr << "Failed to open shader file: " << filePath << std::endl;
             return "";
         }
         

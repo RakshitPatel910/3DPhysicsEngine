@@ -24,7 +24,7 @@ public:
     virtual Vector3 Support(const Vector3& dir) const override;
 
 private:
-    Mesh* createMesh(float r, unsigned int slices, unsigned int stacks);
+    // Mesh* createMesh(float r, unsigned int slices, unsigned int stacks);
 };
 
 class Cube : public Shape
@@ -38,10 +38,10 @@ public:
     virtual Vector3 Support(const Vector3& dir) const override;
 };
 
-class MeshShape : public Shape
-{
-    // Empty or any specific implementation
-};
+// class MeshShape : public Shape
+// {
+//     // Empty or any specific implementation
+// };
 
 
 // #include "Mesh.h"

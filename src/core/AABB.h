@@ -3,9 +3,10 @@
 #include<iostream>
 
 #include "Vector3.h"
-#include "Collider.h"
+// #include "Collider.h"
 
 class Node;
+class Collider;
 
 class AABB {
 public:

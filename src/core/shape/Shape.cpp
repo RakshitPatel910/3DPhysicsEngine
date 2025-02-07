@@ -5,12 +5,12 @@
 Sphere::Sphere(const Vector3& center, const float radius) 
     : m_center(center), m_radius(radius) {}
 
-Sphere::createMesh(float r, unsigned int slices, unsigned int stacks){
+// Sphere::createMesh(float r, unsigned int slices, unsigned int stacks){
     
-    for(unsigned int i = 0; i <= stacks; i++){
-        float stackAngle = glm::pi<float>() * float(i) / float(stacks);
-    }
-}
+//     for(unsigned int i = 0; i <= stacks; i++){
+//         float stackAngle = glm::pi<float>() * float(i) / float(stacks);
+//     }
+// }
 
 Vector3 Sphere::Support(const Vector3& dir) const {
     return m_center + dir.normalized() * m_radius;

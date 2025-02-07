@@ -6,6 +6,8 @@
 #include "AABB.h"
 #include "./shape/Shape.h"
 
+class AABB;
+
 class Collider
 {
 public:
