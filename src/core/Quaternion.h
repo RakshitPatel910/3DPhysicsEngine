@@ -60,6 +60,13 @@ public:
     float getZ() const { return z; }
     float getW() const { return w; }
 
+    void setQ(float w, float x, float y, float z) {
+        this->w = w;
+        this->x = x;
+        this->y = y;
+        this->z = z;
+    }
+
     void printQ() const {
         std::cout << w << ", " << x << ", " << y << ", " << z << '\n';
     }
@@ -74,7 +81,7 @@ public:
     }
 
     Quaternion conjugate() const {
-        return Quaternion(w, -x, -y, -z);
+        return Quaternion(w, Vector3(-x, -y, -z));
     }
 
     Matrix4 toMatrix4() const {
@@ -104,9 +111,15 @@ public:
     }
 
     Vector3 rotateVec(const Vector3& vec) const {
-        Quaternion p(0, vec.x, vec.y, vec.z);
-        Quaternion q_conj = conjugate();
+        Quaternion p = Quaternion(0, vec);
+        Quaternion q_conj = this->conjugate();
         Quaternion rotated = (*this * p) * q_conj;
+
+        std::cout << "vec : "; vec.printV();
+        std::cout << "pq : "; p.printQ();
+        std::cout << "q_ : "; this->printQ();
+        std::cout << "q_conj : "; q_conj.printQ();
+        std::cout << "rotated : "; rotated.printQ();
 
         return Vector3(rotated.x, rotated.y, rotated.z);
     }

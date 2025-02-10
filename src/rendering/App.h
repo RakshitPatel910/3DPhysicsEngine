@@ -59,18 +59,20 @@ private:
         });
 
         window.setMouseCallback([this](double x, double y) {
-            if(firstMouse) {
+            if(glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+                if(firstMouse) {
+                    lastMouseX = x;
+                    lastMouseY = y;
+                    firstMouse = false;
+                }
+                
+                double xoffset = x - lastMouseX;
+                double yoffset = lastMouseY - y; // Reversed y
                 lastMouseX = x;
                 lastMouseY = y;
-                firstMouse = false;
+                
+                camera.processLook(xoffset*0.01, yoffset*0.01);
             }
-
-            double xoffset = x - lastMouseX;
-            double yoffset = lastMouseY - y; // Reversed y
-            lastMouseX = x;
-            lastMouseY = y;
-
-            camera.processLook(xoffset, yoffset);
         });
     }
 
@@ -85,18 +87,22 @@ private:
             movement.x -= 1;
         if(glfwGetKey(window.getHandle(), GLFW_KEY_D) == GLFW_PRESS)
             movement.x += 1;
+        if(glfwGetKey(window.getHandle(), GLFW_KEY_Q) == GLFW_PRESS)
+            movement.y += 1;
+        if(glfwGetKey(window.getHandle(), GLFW_KEY_E) == GLFW_PRESS)
+            movement.y -= 1;
 
         camera.processMovement(movement, deltaTime);
     }
 
     void renderScene() {
         static Mesh cube = createCubeMesh();
-        static glm::mat4 cubeTransform = Matrix4().toGlm();
+        static glm::mat4 cubeTransform = (Matrix4() * Quaternion(3.14159265359f / 2.5f, 0, 1, 0).toMatrix4()).toGlm();
         
         // std::cout << glm::to_string(camera.getViewMatrix()) << std::endl;
-        Matrix4 m = Matrix4();
-        m = m.fromGlm(camera.getViewMatrix());
-        m.printMat();
+        // Matrix4 m = Matrix4();
+        // m = m.fromGlm(camera.getViewMatrix());
+        // m.printMat();
         // glm::mat4 m = camera.getViewMatrix();
         // for (int i = 0; i < 4; ++i) {
         //     for (int j = 0; j < 4; ++j) {

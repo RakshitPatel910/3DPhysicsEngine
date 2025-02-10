@@ -41,7 +41,7 @@ public:
     }
 
     void setMouseCallback(MouseCallback cb) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         glfwSetWindowUserPointer(window, this);
         glfwSetCursorPosCallback(window, [](GLFWwindow* win, double x, double y) {
             auto self = static_cast<Window*>(glfwGetWindowUserPointer(win));

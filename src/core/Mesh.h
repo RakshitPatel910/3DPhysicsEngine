@@ -63,14 +63,14 @@ public:
         glEnableVertexAttribArray(0);
 
         std::vector<glm::vec3> glmNorm;
-        glmVer.reserve(vertices.size());
+        glmVer.reserve(normals.size());
         for(const Vector3& vec : normals) {
             glmNorm.push_back(glm::vec3(vec.x, vec.y, vec.z));
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, normalBufffer);
         glBufferData(GL_ARRAY_BUFFER, glmNorm.size() * sizeof(glm::vec3), glmNorm.data(), GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (GLvoid*)0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (GLvoid*)0);
         glEnableVertexAttribArray(1);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
