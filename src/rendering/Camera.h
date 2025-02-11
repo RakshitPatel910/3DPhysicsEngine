@@ -74,54 +74,54 @@ public:
         // pos.printV();
     }
 
-    // void processLook(float x_offset, float y_offset) {
-    //     // x_offset *= sensitivity;
-    //     // y_offset *= sensitivity;
-
-    //     // Quaternion yawRotationQ(x_offset, Vector3(0.0f, 1.0f, 0.0f)); // Global Y-axis
-    //     // Quaternion pitchRotationQ(y_offset, Vector3(1.0f, 0.0f, 0.0f)); // Local Right-axis
-
-    //     // std::cout << "orientation : "; orientation.printQ();
-    //     // std::cout << "yaw : "; yawRotationQ.printQ();
-    //     // std::cout << "pitch : "; pitchRotationQ.printQ();
-
-    //     // // orientation = yawRotationQ * orientation * pitchRotationQ; // NewOrientation = ΔYawGlobal × CurrentOrientation × ΔPitchLocal
-    //     // orientation.normalize();
-    // }
     void processLook(float x_offset, float y_offset) {
-        x_offset *= sensitivity;
-        y_offset *= sensitivity;
-    
-        // Print initial orientation
-        std::cout << "Initial Orientation Quaternion: ";
-        orientation.printQ();
-    
-        // Create yaw rotation quaternion (rotation around Y-axis)
-        Quaternion yawRotationQ(x_offset, 0.0f, 1.0f, 0.0f);
-        std::cout << "Yaw Quaternion: ";
-        yawRotationQ.printQ();
-    
-        // Apply yaw rotation to orientation and normalize
-        orientation = yawRotationQ * orientation;
+        x_offset *= sensitivity * 0.01;
+        y_offset *= sensitivity * 0.01;
+
+        Quaternion yawRotationQ(x_offset, 0.0f, 1.0f, 0.0f); // Global Y-axis
+        Quaternion pitchRotationQ(y_offset, 1.0f, 0.0f, 0.0f); // Local Right-axis
+
+        // std::cout << "orientation : "; orientation.printQ();
+        // std::cout << "yaw : "; yawRotationQ.printQ();
+        // std::cout << "pitch : "; pitchRotationQ.printQ();
+
+        orientation = yawRotationQ * orientation * pitchRotationQ; // NewOrientation = ΔYawGlobal × CurrentOrientation × ΔPitchLocal
         orientation.normalize();
-        std::cout << "Orientation after yaw rotation: ";
-        orientation.printQ();
-    
-        // Create pitch rotation quaternion (rotation around X-axis)
-        Quaternion pitchRotationQ(y_offset, 1.0f, 0.0f, 0.0f);
-        std::cout << "Pitch Quaternion: ";
-        pitchRotationQ.printQ();
-    
-        // Apply pitch rotation to orientation and normalize
-        orientation = orientation * pitchRotationQ;
-        orientation.normalize();
-        std::cout << "Orientation after pitch rotation: ";
-        orientation.printQ();
-    
-        // Final orientation quaternion print
-        std::cout << "Final Orientation: ";
-        orientation.printQ();
     }
+    // void processLook(float x_offset, float y_offset) {
+    //     x_offset *= sensitivity*0.01;
+    //     y_offset *= sensitivity*0.01;
+    
+    //     // Print initial orientation
+    //     std::cout << "Initial Orientation Quaternion: ";
+    //     orientation.printQ();
+    
+    //     // Create yaw rotation quaternion (rotation around Y-axis)
+    //     Quaternion yawRotationQ(x_offset, 0.0f, 1.0f, 0.0f);
+    //     std::cout << "Yaw Quaternion: ";
+    //     yawRotationQ.printQ();
+    
+    //     // Apply yaw rotation to orientation and normalize
+    //     orientation = yawRotationQ * orientation;
+    //     orientation.normalize();
+    //     std::cout << "Orientation after yaw rotation: ";
+    //     orientation.printQ();
+    
+    //     // Create pitch rotation quaternion (rotation around X-axis)
+    //     Quaternion pitchRotationQ(y_offset, 1.0f, 0.0f, 0.0f);
+    //     std::cout << "Pitch Quaternion: ";
+    //     pitchRotationQ.printQ();
+    
+    //     // Apply pitch rotation to orientation and normalize
+    //     orientation = orientation * pitchRotationQ;
+    //     orientation.normalize();
+    //     std::cout << "Orientation after pitch rotation: ";
+    //     orientation.printQ();
+    
+    //     // Final orientation quaternion print
+    //     std::cout << "Final Orientation: ";
+    //     orientation.printQ();
+    // }
     
 
 };

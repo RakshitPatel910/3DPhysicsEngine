@@ -30,7 +30,7 @@ public:
 
         glEnable(GL_DEPTH_TEST);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glEnable(GL_CULL_FACE);
+        // glEnable(GL_CULL_FACE);
     }
 
     // void submitMesh(const Mesh& mesh, const glm::mat4& transform) {

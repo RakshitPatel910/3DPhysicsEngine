@@ -6,6 +6,7 @@
 #include "../core/Vector3.h"
 #include "../core/Matrix4.h"
 #include "../core/Mesh.h"
+#include "../core/MeshLibrary.h"
 
 class App {
 public:
@@ -58,6 +59,8 @@ private:
             glViewport(0, 0, w, h);
         });
 
+
+
         window.setMouseCallback([this](double x, double y) {
             if(glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
                 if(firstMouse) {
@@ -71,7 +74,11 @@ private:
                 lastMouseX = x;
                 lastMouseY = y;
                 
-                camera.processLook(xoffset*0.01, yoffset*0.01);
+                camera.processLook(xoffset, yoffset);
+            }
+
+            if(glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
+                firstMouse = true;
             }
         });
     }
@@ -96,8 +103,14 @@ private:
     }
 
     void renderScene() {
-        static Mesh cube = createCubeMesh();
+        // static Mesh cube = createCubeMesh();
+        const Mesh& cube = MeshLibrary::getCubeMesh();
+        const Mesh& sphere = MeshLibrary::getSphereMesh();
+        const Mesh& cylinder = MeshLibrary::GetCylinderMesh();
+
         static glm::mat4 cubeTransform = (Matrix4() * Quaternion(3.14159265359f / 2.5f, 0, 1, 0).toMatrix4()).toGlm();
+        static glm::mat4 sphereTransform = (Matrix4::getTranslationMatrix(Vector3(2.5,-0.5,0))).toGlm();
+        static glm::mat4 cylinderTransform = (Matrix4::getTranslationMatrix(Vector3(0.75,2,0))).toGlm();
         
         // std::cout << glm::to_string(camera.getViewMatrix()) << std::endl;
         // Matrix4 m = Matrix4();
@@ -115,6 +128,8 @@ private:
 
         // cubeTransform.rotation.y += 1.0f;
         renderer.submitMesh(cube, cubeTransform);
+        renderer.submitMesh(sphere, sphereTransform);
+        renderer.submitMesh(cylinder, cylinderTransform);
     }
 
     // Mesh createCubeMesh() {

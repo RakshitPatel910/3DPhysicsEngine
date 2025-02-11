@@ -115,11 +115,11 @@ public:
         Quaternion q_conj = this->conjugate();
         Quaternion rotated = (*this * p) * q_conj;
 
-        std::cout << "vec : "; vec.printV();
-        std::cout << "pq : "; p.printQ();
-        std::cout << "q_ : "; this->printQ();
-        std::cout << "q_conj : "; q_conj.printQ();
-        std::cout << "rotated : "; rotated.printQ();
+        // std::cout << "vec : "; vec.printV();
+        // std::cout << "pq : "; p.printQ();
+        // std::cout << "q_ : "; this->printQ();
+        // std::cout << "q_conj : "; q_conj.printQ();
+        // std::cout << "rotated : "; rotated.printQ();
 
         return Vector3(rotated.x, rotated.y, rotated.z);
     }
