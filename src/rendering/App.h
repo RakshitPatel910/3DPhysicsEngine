@@ -7,6 +7,7 @@
 #include "../core/Matrix4.h"
 #include "../core/Mesh.h"
 #include "../core/MeshLibrary.h"
+#include "../core/MeshLoader.h"
 
 class App {
 public:
@@ -51,6 +52,8 @@ private:
     double lastMouseX = 0;
     double lastMouseY = 0;
     bool firstMouse = true;
+
+    const Mesh* teapot = MeshLoader::loadFromObj("../src/rendering/resources/teapot.obj");
 
     void setupCallbacks() {
         window.setResizeCallback([this](int w, int h) {
@@ -104,13 +107,14 @@ private:
 
     void renderScene() {
         // static Mesh cube = createCubeMesh();
-        const Mesh& cube = MeshLibrary::getCubeMesh();
-        const Mesh& sphere = MeshLibrary::getSphereMesh();
-        const Mesh& cylinder = MeshLibrary::GetCylinderMesh();
+        // const Mesh& cube = MeshLibrary::getCubeMesh();
+        // const Mesh& sphere = MeshLibrary::getSphereMesh();
+        // const Mesh& cylinder = MeshLibrary::GetCylinderMesh();
 
-        static glm::mat4 cubeTransform = (Matrix4() * Quaternion(3.14159265359f / 2.5f, 0, 1, 0).toMatrix4()).toGlm();
-        static glm::mat4 sphereTransform = (Matrix4::getTranslationMatrix(Vector3(2.5,-0.5,0))).toGlm();
-        static glm::mat4 cylinderTransform = (Matrix4::getTranslationMatrix(Vector3(0.75,2,0))).toGlm();
+        // static glm::mat4 cubeTransform = (Matrix4() * Quaternion(3.14159265359f / 2.5f, 0, 1, 0).toMatrix4()).toGlm();
+        // static glm::mat4 sphereTransform = (Matrix4::getTranslationMatrix(Vector3(2.5,-0.5,0))).toGlm();
+        // static glm::mat4 cylinderTransform = (Matrix4::getTranslationMatrix(Vector3(0.75,2,0))).toGlm();
+        static glm::mat4 teapotTransform = Matrix4().toGlm();
         
         // std::cout << glm::to_string(camera.getViewMatrix()) << std::endl;
         // Matrix4 m = Matrix4();
@@ -127,46 +131,10 @@ private:
         // std::cout << "cam pos "; camera.pos.printV();
 
         // cubeTransform.rotation.y += 1.0f;
-        renderer.submitMesh(cube, cubeTransform);
-        renderer.submitMesh(sphere, sphereTransform);
-        renderer.submitMesh(cylinder, cylinderTransform);
+        // renderer.submitMesh(cube, cubeTransform);
+        // renderer.submitMesh(sphere, sphereTransform);
+        // renderer.submitMesh(cylinder, cylinderTransform);
+        renderer.submitMesh(*teapot, teapotTransform);
     }
 
-    // Mesh createCubeMesh() {
-    //     // Implement cube vertex data
-    //     std::vector<Vector3> vertices = {...};
-    //     std::vector<Vector3> normals = {...};
-    //     std::vector<unsigned int> indices = {...};
-        
-    //     return Mesh(vertices, normals, indices);
-    // }
-    Mesh createCubeMesh() {
-        std::vector<Vector3> vertices = {
-            // Front face
-            {-0.5f, -0.5f,  0.5f}, {0.5f, -0.5f,  0.5f}, {0.5f,  0.5f,  0.5f},
-            {-0.5f,  0.5f,  0.5f},
-            // Back face
-            {-0.5f, -0.5f, -0.5f}, {0.5f, -0.5f, -0.5f}, {0.5f,  0.5f, -0.5f},
-            {-0.5f,  0.5f, -0.5f}
-        };
-    
-        std::vector<Vector3> normals(vertices.size(), {0, 0, 1}); // Simplified normals
-    
-        std::vector<unsigned int> indices = {
-            // Front
-            0, 1, 2, 2, 3, 0,
-            // Back
-            4, 5, 6, 6, 7, 4,
-            // Left
-            4, 0, 3, 3, 7, 4,
-            // Right
-            1, 5, 6, 6, 2, 1,
-            // Top
-            3, 2, 6, 6, 7, 3,
-            // Bottom
-            4, 5, 1, 1, 0, 4
-        };
-    
-        return Mesh(vertices, normals, indices);
-    }
 };

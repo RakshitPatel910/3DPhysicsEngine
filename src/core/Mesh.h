@@ -23,12 +23,26 @@ public:
     // std::vector<Face> faces;
     std::vector<Vector3> normals;
     std::vector<unsigned int> indices;
+    std::vector<unsigned int> lineIndices;
 
-    GLuint VAO, VBO, EBO, normalBufffer;
+    GLuint VAO, VBO, EBO, normalBufffer, lineEBO;
 
     Mesh(const std::vector<Vector3>& vertices, const std::vector<Vector3>& normals, const std::vector<unsigned int>& indices)
         : vertices(vertices), normals(normals), indices(indices) 
     {
+        for(size_t i = 0; i < indices.size(); i += 3) {
+            unsigned int v0 = indices[i];
+            unsigned int v1 = indices[i + 1];
+            unsigned int v2 = indices[i + 2];
+
+            lineIndices.push_back(v0);
+            lineIndices.push_back(v1);
+            lineIndices.push_back(v1);
+            lineIndices.push_back(v2);
+            lineIndices.push_back(v2);
+            lineIndices.push_back(v0);
+        }
+
         setBuffers();
     }
 
@@ -48,6 +62,7 @@ public:
         glGenBuffers(1, &VBO);
         glGenBuffers(1, &EBO);
         glGenBuffers(1, &normalBufffer);
+        glGenBuffers(1, &lineEBO);
 
         glBindVertexArray(VAO);
 
@@ -75,6 +90,13 @@ public:
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lineEBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, lineIndices.size() * sizeof(unsigned int), lineIndices.data(), GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER, EBO);
+
+        glBindVertexArray(0);
     }
 
     // void draw(GLuint shaderProgram) {
@@ -85,6 +107,24 @@ public:
         // glUseProgram(shaderProgram);
 
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+        glBindVertexArray(0);
+    }
+
+    void drawWireframe() const {
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lineEBO);
+        
+        glDrawElements(GL_LINES, lineIndices.size(), GL_UNSIGNED_INT, 0);
+        
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBindVertexArray(0);
+    }
+
+    void drawVertices() const {
+        glBindVertexArray(VAO);
+
+        glDrawArrays(GL_POINTS, 0, vertices.size());
 
         glBindVertexArray(0);
     }

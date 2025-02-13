@@ -65,7 +65,9 @@ public:
 
         for(const auto& cmd : commands) {
             defaultShader.setUnifMat4("model", cmd.transform);
-            cmd.mesh->draw();
+            // cmd.mesh->draw();
+            cmd.mesh->drawWireframe();
+            cmd.mesh->drawVertices();
         }
 
         commands.clear();
