@@ -256,6 +256,9 @@ public:
                 contactData.worldContactPointA =  (supportLocal1 * bary_u) + (supportLocal2 * bary_v) + (supportLocal3 * bary_w);
                 contactData.worldContactPointB =  (supportLocal1 * bary_u) + (supportLocal2 * bary_v) + (supportLocal3 * bary_w);
 
+                contactData.localContactPointA = colA.m_body->globalToLocalVector(contactData.worldContactPointA);
+                contactData.localContactPointB = colB.m_body->globalToLocalVector(contactData.worldContactPointB);
+
                 contactData.contactNormal = (closestTriangle->normal).normalized();
                 // contactData.contactNormal = closestTriangle->normal;
 
@@ -270,8 +273,14 @@ public:
                 Vector3 Pa = colA.Support(contactData.contactNormal);
                 Vector3 Pb = colB.Support(-contactData.contactNormal);
 
-                // contactData.penetrationDepth = minDist;
-                contactData.penetrationDepth = (std::abs(Pa.dot(contactData.contactNormal)) - std::abs(Pb.dot(contactData.contactNormal)));
+                // Ensure normal points from B to A
+                if (contactData.contactNormal.dot(Pa - Pb) < 0.0f) {
+                    contactData.contactNormal = -contactData.contactNormal;
+                }
+
+                contactData.penetrationDepth = minDist;
+                // contactData.penetrationDepth = (std::abs(Pa.dot(contactData.contactNormal)) - std::abs(Pb.dot(contactData.contactNormal)));
+                // contactData.penetrationDepth = (Pa - Pb).dot(contactData.contactNormal);
 
                 return contactData;
             }

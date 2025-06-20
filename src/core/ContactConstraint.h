@@ -5,10 +5,13 @@
 #include "EPA.h"
 #include "Constraint.h"
 
+#include <memory>
+
 class ContactConstraint : public Constraint
 {
 public:
-    ContactData* contactData;
+    // ContactData* contactData;
+    std::unique_ptr<ContactData> contactData;
 
     ContactConstraint(Collider* colliderA, Collider* colliderB) : Constraint(colliderA, colliderB) {}
 

@@ -1,27 +1,35 @@
 #pragma once
 
 #include "../Vector3.h"
+#include "../Matrix4.h"
 #include "../Mesh.h"
 
 class Shape
 {
 protected:
-    Mesh* mesh;
-    
+
 public:
+const Mesh* mesh;
+Matrix4 inertiaTensor;
+    Vector3 scaleFactor;
+
     virtual ~Shape() {}
     virtual Vector3 Support(const Vector3& dir) const = 0;
+    virtual void calculateInertiaTensor(float mass) = 0;
+    virtual Matrix4 getInertiaTensor() const = 0;
 };
 
 class Sphere : public Shape 
 {
 public:
-    Vector3 m_center;
+    // Vector3 m_center;
     float m_radius;
 
-    Sphere(const Vector3& center, const float radius);
+    Sphere(const float radius);
 
     virtual Vector3 Support(const Vector3& dir) const override;
+    virtual void calculateInertiaTensor(float mass) override;
+    virtual Matrix4 getInertiaTensor() const override;
 
 private:
     // Mesh* createMesh(float r, unsigned int slices, unsigned int stacks);
@@ -30,12 +38,14 @@ private:
 class Cube : public Shape
 {
 public:
-    Vector3 m_center;
+    // Vector3 m_center;
     Vector3 m_halfext;
 
-    Cube(const Vector3& center, const Vector3& halfext);
+    Cube(const Vector3& halfext);
 
     virtual Vector3 Support(const Vector3& dir) const override;
+    virtual void calculateInertiaTensor(float mass) override;
+    virtual Matrix4 getInertiaTensor() const override;
 };
 
 // class MeshShape : public Shape

@@ -50,7 +50,12 @@ public:
 
         Vector3 direction = Vector3(1, 0, 0); // initial direction
 
+        // std::cout << "dir : "; direction.printV();
         Vector3 support = colA.Support(direction) - colB.Support(-direction);
+        // std::cout << "sup : "; support.printV();
+        // colA.Support(direction).printV();
+        // colB.Support(-direction).printV();
+
 
         if(direction.dot(support) >= support.length() * 0.8f){ // stability check
             direction = Vector3(0, 1, 0);
@@ -62,7 +67,11 @@ public:
         direction = -direction;
 
         while (true) {
+            // std::cout << "dir : "; direction.printV();
             support = colA.Support(direction) - colB.Support(-direction);
+
+            // colA.Support(direction).printV();
+            // colB.Support(-direction).printV();
 
             if(support.dot(direction) <= 0.0f){ // no collision
                 return false;
@@ -72,6 +81,8 @@ public:
 
             if(simplex.containsOrigin(direction)){ // collision
                 // simplexToTetrahedron(simplex, shapeA, shapeB, colA, colB);
+                // simplex.printSimplex();
+
                 simplexToTetrahedron(simplex, colA, colB);
 
                 return true;

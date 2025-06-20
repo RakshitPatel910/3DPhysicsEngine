@@ -2,9 +2,11 @@
 
 #include<cmath>
 #include<string>
+
 #include "Vector3.h"
 #include "Matrix4.h"
 #include "Quaternion.h"
+#include "./shape/Shape.h"
 
 
 class BoxShape {
@@ -40,7 +42,9 @@ class RigidBody
 {
 // private:
 public:
-    BoxShape shape;
+    float mass;
+
+    Shape* shape;
 
     Vector3 pos;
     Vector3 v;
@@ -59,7 +63,9 @@ public:
 
 public:
     RigidBody(
-        const BoxShape& shape = BoxShape(),
+        float mass = 1.0f,
+        // Shape* shape = &Cube(Vector3(2,3,1)),
+        Shape* shape = nullptr,
         const Vector3& pos = Vector3(),
         Vector3 v = Vector3(),
         std::string m_name = "",
@@ -68,8 +74,11 @@ public:
         Vector3 torque = Vector3(),
         Quaternion q = Quaternion()
         // Matrix4 tr_mat = Matrix4()
-    ) : shape(shape), pos(pos), v(v), m_name(m_name), ang_v(ang_v), force(force), torque(torque), q(q) {
-        updateInertiaTensor();
+    ) : mass(mass), shape(shape), pos(pos), v(v), m_name(m_name), ang_v(ang_v), force(force), torque(torque), q(q) {
+        // updateInertiaTensor();
+        shape->calculateInertiaTensor(mass);
+        inertiaTensor = shape->getInertiaTensor();
+
         updateTransform();
     }
 
@@ -120,7 +129,7 @@ public:
     }
 
     void updateInertiaTensor(){
-        Matrix4 localInertia = shape.inertiaTensor; // Use shape's local inertia tensor
+        Matrix4 localInertia = shape->getInertiaTensor(); // Use shape's local inertia tensor
         Matrix4 rotationMat = q.toMatrix4();
 
         // Compute world inertia tensor: R * I_local * R^T
@@ -131,7 +140,7 @@ public:
     void updateTransform(){
         Matrix4 translationMat = Matrix4::getTranslationMatrix(pos);
         Matrix4 rotationMat = q.toMatrix4();
-        Matrix4 scalingMat = Matrix4::getScalingMatrix(Vector3(shape.width, shape.height, shape.depth));
+        Matrix4 scalingMat = Matrix4::getScalingMatrix(Vector3(shape->scaleFactor.x, shape->scaleFactor.y, shape->scaleFactor.z));
 
         // tr_mat = translationMat * rotationMat * scalingMat;
         tr_mat = scalingMat * rotationMat * translationMat;
@@ -151,9 +160,11 @@ public:
     }
 
     void integratePhysics(float dt){
-        Vector3 a = force / shape.mass;
+        Vector3 a = force / mass;
         v = v + a * dt;
         pos = pos + v * dt;
+
+        // std::cout << "pos in :"; pos.printV();
 
         // std::cout << force.getX() << ", " << force.getY() << ", " << force.getZ() << std::endl;
 

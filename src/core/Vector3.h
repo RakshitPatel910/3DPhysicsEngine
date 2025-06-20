@@ -126,6 +126,10 @@ public:
         return std::acos(cosTheta);
     }
 
+    static inline Vector3 tripleCross(const Vector3& a, const Vector3& b, const Vector3& c) {
+        return a.cross(b).cross(c);
+    }
+
     // bool isCollinear(const Vector3& a, const Vector3& b){
     //     return std::abs()
     // }

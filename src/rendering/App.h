@@ -9,13 +9,22 @@
 #include "../core/MeshLibrary.h"
 #include "../core/MeshLoader.h"
 
+// #include "../core/Vector3.h"
+// #include "../core/Matrix4.h"
+#include "../core/Quaternion.h"
+#include "../core/RigidBody.h"
+#include "../core/AABB.h"
+#include "../core/Collider.h"
+#include "../core/shape/Shape.h"
+#include "../core/PhysicsWorld.h"
+
 class App {
 public:
     App() : window(1280, 720, "Physics Engine"),
             renderer(),
             camera(Camera()) 
     {
-        // camera.pos = Vector3(0, 0, 5);
+        camera.pos = Vector3(0, 0, 50);
         camera.pos.printV();
         setupCallbacks();
         renderer.initialize(windowWidth, windowHeight);
@@ -24,6 +33,43 @@ public:
     void run() {
         double lastTime = glfwGetTime();
         
+        // Cube cube1(Vector3(2, 3, 1));
+        // Cube cube2(Vector3(2, 3, 1));
+
+        // Cube cube1(Vector3(1.0f, 1.0f, 1.0f));
+        // Cube cube2(Vector3(1.4f, 0.1f, 1.0f));
+
+        Sphere cube1(2);
+        Sphere cube2(2);
+
+        RigidBody rb1(5.0f, &cube1, Vector3(-20,2,0.0f), Vector3(0.5f,0, 0), "cube 1");
+        RigidBody rb2(5.0f, &cube2, Vector3(20,0,0.0f), Vector3(-0.5f,0, 0), "cube 2");
+
+        // RigidBody rb1(5.0f, &cube1, Vector3(0.0f, 0.0f, 0.0f), Vector3(0,0, 0), "cube 1");
+        // RigidBody rb2(5.0f, &cube2, Vector3(2.0f, 0.4f, 0.0f), Vector3(0,0, 0), "cube 2");
+
+        std::shared_ptr<RigidBody> rb1ptr= std::make_shared<RigidBody>(rb1);
+        std::shared_ptr<RigidBody> rb2ptr= std::make_shared<RigidBody>(rb2);
+
+        Collider cl1(5.0f, rb1.inertiaTensor, Vector3(), rb1ptr, &cube1, Collider::ColliderType::DYNAMIC);
+        Collider cl2(5.0f, rb2.inertiaTensor, Vector3(), rb2ptr, &cube2, Collider::ColliderType::DYNAMIC);
+
+        AABB aabb1 = AABB::fromHalfCentralExtents(rb1.getPosition(), Vector3(2,3,1));
+        AABB aabb2 = AABB::fromHalfCentralExtents(rb2.getPosition(), Vector3(2,3,1));
+
+        PhysicsWorld physicsWorld(&renderer);
+
+        std::shared_ptr<Collider> cl1ptr = std::make_shared<Collider>(cl1);
+        std::shared_ptr<Collider> cl2ptr = std::make_shared<Collider>(cl2);
+
+        physicsWorld.addRigidBody(rb1ptr, cl1ptr);
+        physicsWorld.addRigidBody(rb2ptr, cl2ptr);
+
+        // PhysicsWorld.simulate();
+
+        // physicsWorld.simulate();
+
+
         while(!window.shouldClose()) {
             // Calculate delta time
             double currentTime = glfwGetTime();
@@ -36,6 +82,9 @@ public:
             // Render
             renderer.beginFrame();
             renderScene();
+
+            physicsWorld.simulate();
+
             renderer.endFrame(camera);
             
             window.swapBuffers();
@@ -53,7 +102,8 @@ private:
     double lastMouseY = 0;
     bool firstMouse = true;
 
-    const Mesh* teapot = MeshLoader::loadFromObj("../src/rendering/resources/teapot.obj");
+    // const Mesh* teapot = MeshLoader::loadFromObj("../src/rendering/resources/teapot.obj");
+    // const Mesh* teapot = MeshLoader::loadFromObj("../src/rendering/resources/donut_icing.obj");
 
     void setupCallbacks() {
         window.setResizeCallback([this](int w, int h) {
@@ -114,7 +164,7 @@ private:
         // static glm::mat4 cubeTransform = (Matrix4() * Quaternion(3.14159265359f / 2.5f, 0, 1, 0).toMatrix4()).toGlm();
         // static glm::mat4 sphereTransform = (Matrix4::getTranslationMatrix(Vector3(2.5,-0.5,0))).toGlm();
         // static glm::mat4 cylinderTransform = (Matrix4::getTranslationMatrix(Vector3(0.75,2,0))).toGlm();
-        static glm::mat4 teapotTransform = Matrix4().toGlm();
+        // static glm::mat4 teapotTransform = Matrix4().toGlm();
         
         // std::cout << glm::to_string(camera.getViewMatrix()) << std::endl;
         // Matrix4 m = Matrix4();
@@ -134,7 +184,7 @@ private:
         // renderer.submitMesh(cube, cubeTransform);
         // renderer.submitMesh(sphere, sphereTransform);
         // renderer.submitMesh(cylinder, cylinderTransform);
-        renderer.submitMesh(*teapot, teapotTransform);
+        // renderer.submitMesh(*teapot, teapotTransform);
     }
 
 };

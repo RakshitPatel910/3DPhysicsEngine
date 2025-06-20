@@ -10,7 +10,8 @@
 class Manifold
 {
 public:
-    const persistent_threshold = 0.001;
+    // const float persistent_threshold = 0.001;
+    float persistent_threshold = 0.001;
 
     Collider* colliderA;
     Collider* colliderB;
@@ -18,6 +19,8 @@ public:
     std::vector<ContactData> persistentContacts;
     // size_t contactCount;
     size_t maxCount = 4;
+
+    Manifold() : colliderA(nullptr), colliderB(nullptr) {}
 
     Manifold(Collider* colliderA, Collider* colliderB) : colliderA(colliderA), colliderB(colliderB) {}
 
@@ -28,10 +31,10 @@ public:
             const Vector3 rA = contact.localContactPointA - contact.worldContactPointA;
             const Vector3 rB = contact.localContactPointB - contact.worldContactPointB;
 
-            const isPenetrating = contact.normal.dot(rAB) <= 0.0f;
+            const bool isPenetrating = contact.contactNormal.dot(rAB) <= 0.0f;
 
-            const closeEnoughrA = rA.lengthSq() < persistent_threshold;
-            const closeEnoughrB = rB.lengthSq() < persistent_threshold;
+            const bool closeEnoughrA = rA.lengthSq() < persistent_threshold;
+            const bool closeEnoughrB = rB.lengthSq() < persistent_threshold;
 
             // if( closeEnoughA && closeEnoughB ) {
             //     contact.isPersistent = true;
@@ -87,11 +90,11 @@ public:
             }
 
             // find furthest point for 1st point ===> [ 2nd point of manifold ]
-            ContactData* furthest1* = nullptr;
+            ContactData* furthest1 = nullptr;
             float maxDist1 = -std::numeric_limits<float>::max();
 
             for( ContactData& contact : persistentContacts ) {
-                float dist = (contact.worldContactPointA - deepest->worldContactPointA).lengthSq();
+                float dist = (contact.worldContactPointA - deepestPoint->worldContactPointA).lengthSq();
 
                 if( dist > maxDist1 ){
                     maxDist1 = dist;
@@ -104,7 +107,7 @@ public:
             float maxDist2 = -std::numeric_limits<float>::max();
 
             for( ContactData& contact : persistentContacts ) {
-                float dist = DistanceFromLineSegment(contact.worldContactPointA, deepest->worldContactPointA, furthest1->worldContactPointA);
+                float dist = DistanceFromLineSegment(contact.worldContactPointA, deepestPoint->worldContactPointA, furthest1->worldContactPointA);
 
                 if( dist > maxDist2 ){
                     maxDist2 = dist;
@@ -117,7 +120,7 @@ public:
             float maxDist3 = -std::numeric_limits<float>::max();
 
             for( ContactData& contact : persistentContacts ) {
-                float dist = DistanceFromTriangle(contact.worldContactPointA, deepest->worldContactPointA, furthest1->worldContactPointA, furthest2->worldContactPointA);
+                float dist = DistanceFromTriangle(contact.worldContactPointA, deepestPoint->worldContactPointA, furthest1->worldContactPointA, furthest2->worldContactPointA);
 
                 if( dist > maxDist3 ){
                     maxDist3 = dist; 
@@ -127,12 +130,12 @@ public:
 
             // rebuild manifold
             persistentContacts.clear();
-            persistentContacts.push_back(*deepest);
+            persistentContacts.push_back(*deepestPoint);
             persistentContacts.push_back(*furthest1);
             persistentContacts.push_back(*furthest2);
 
-            if (furthest3 && !isInsideTriangle(furthest3->worldContactPointA, 
-                                            deepest->worldContactPointA, 
+            if (furthest3 && !IsInsideTriangle(furthest3->worldContactPointA, 
+                                            deepestPoint->worldContactPointA, 
                                             furthest1->worldContactPointA, 
                                             furthest2->worldContactPointA)) {
                 persistentContacts.push_back(*furthest3);
@@ -154,9 +157,9 @@ private:
     }
 
     bool IsInsideTriangle(const Vector3& point, const Vector3& A, const Vector3& B, const Vector3& C) {
-        Vector3 v0 = b - a;
-        Vector3 v1 = c - a;
-        Vector3 v2 = point - a;
+        Vector3 v0 = B - A;
+        Vector3 v1 = C - A;
+        Vector3 v2 = point - A;
 
         float d00 = v0.dot(v0);
         float d01 = v0.dot(v1);
@@ -178,16 +181,16 @@ private:
 
     float DistanceFromTriangle(const Vector3& point, const Vector3& A, const Vector3& B, const Vector3& C) {
         // Check if the point is inside the triangle
-        if (isInsideTriangle(point, a, b, c)) {
+        if (IsInsideTriangle(point, A, B, C)) {
             return 0.0f; // Point is inside the triangle, distance is zero
         }
 
         // Otherwise, calculate the distance to each of the three edges and return the minimum
-        float distAB = distanceFromLineSegment(point, a, b); // Distance to edge AB
-        float distBC = distanceFromLineSegment(point, b, c); // Distance to edge BC
-        float distCA = distanceFromLineSegment(point, c, a); // Distance to edge CA
+        float distAB = DistanceFromLineSegment(point, A, B); // Distance to edge AB
+        float distBC = DistanceFromLineSegment(point, B, C); // Distance to edge BC
+        float distCA = DistanceFromLineSegment(point, C, A); // Distance to edge CA
 
         // Return the minimum of the three distances
         return std::min({distAB, distBC, distCA});
     }
-}
+};
