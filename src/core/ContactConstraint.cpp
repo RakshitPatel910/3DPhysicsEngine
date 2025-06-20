@@ -36,6 +36,10 @@ void ContactConstraint::calcJacobian(){
     effectiveMass = (J * Minv_Jtr)(0,0);
 
     // ---- LOGGING BEGIN ----
+    std::cout << "--- Minv_Jtr ---\n";
+    std::cout << Minv_Jtr.transpose() << "\n\n";
+
+
     std::cout << "---- calcJacobian() ----\n";
     
     std::cout << "Jacobian Ja: [" 
@@ -47,110 +51,56 @@ void ContactConstraint::calcJacobian(){
 }
 
 // void ContactConstraint::solveConstraint(float time, std::shared_ptr<ContactData> contact){
-float ContactConstraint::solveConstraint(float dt) {
-    // Relative normal velocity
-    Vector3 n = contactData->contactNormal;
-    Collider* A = colliderA; Collider* B = colliderB;
-    Vector3 Va = A->m_body->v, Wa = A->m_body->ang_v;
-    Vector3 Vb = B->m_body->v, Wb = B->m_body->ang_v;
-    Vector3 ra = contactData->worldContactPointA - A->m_body->getPosition();
-    Vector3 rb = contactData->worldContactPointB - B->m_body->getPosition();
-    float JV = (Vb + Wb.cross(rb) - Va - Wa.cross(ra)).dot(n);
-    
-    // Baumgarte stabilization (push out penetration)
-    const float beta = 0.3f;
-    float baum = -(beta / dt) * contactData->penetrationDepth;
+float ContactConstraint::solveConstraint(float /*dt*/, int iter) {
+    // 1) compute relative normal velocity JV
+    Vector3 n  = contactData->contactNormal;
+    auto A = colliderA->m_body.get();
+    auto B = colliderB->m_body.get();
 
-    // Restitution: apply only if bodies are closing
-    const float restitution = 0.1f; // or contactData->restitution
-    float rawLambda;
-    if (JV < 0.0f) {
-        // Incorporate (1+e) factor for bounce
-        rawLambda = -((1.0f + restitution) * JV + baum) / effectiveMass;
-    } else {
-        // Separating or stationary: only correct penetration (no bounce impulse)
-        rawLambda = -(JV + baum) / effectiveMass;
-    }
-    
-    // Accumulate and clamp normal impulse (≥ 0)
+    Vector3 Va = A->v, Wa = A->ang_v;
+    Vector3 Vb = B->v, Wb = B->ang_v;
+    Vector3 ra = contactData->worldContactPointA - A->getPosition();
+    Vector3 rb = contactData->worldContactPointB - B->getPosition();
+
+    float JV = (Vb + Wb.cross(rb) - Va - Wa.cross(ra)).dot(n);
+
+    // 2) fetch the ONE‑TIME bias & restitution we precomputed at constraint‑build
+    float baum = contactData->biasTerm / float(16);
+    float rest = contactData->restitutionTerm;
+
+    // 3) compute impulse (no extra (1+e) or baum here!)
+    float rawLambda = -(JV + baum + rest) / effectiveMass;
+
+    // 4) accumulate & clamp  
     float oldSum = contactData->normalImpulseSum;
     float newSum = std::max(0.0f, oldSum + rawLambda);
     float dLambda = newSum - oldSum;
     contactData->normalImpulseSum = newSum;
 
-    // Apply impulse ΔV = M^-1 * J^T * dLambda
-    Eigen::Matrix<float,12,1> deltaV = Minv_Jtr * dLambda;
-    Va += Vector3(deltaV(0), deltaV(1), deltaV(2));
-    Wa += Vector3(deltaV(3), deltaV(4), deltaV(5));
-    Vb += Vector3(deltaV(6), deltaV(7), deltaV(8));
-    Wb += Vector3(deltaV(9), deltaV(10), deltaV(11));
+    // 5) apply Δv = M⁻¹·Jᵀ·Δλ
+    Eigen::Matrix<float,12,1> Δv = Minv_Jtr * dLambda;
+    Va += Vector3(Δv(0),  Δv(1),  Δv(2));
+    Wa += Vector3(Δv(3),  Δv(4),  Δv(5));
+    Vb += Vector3(Δv(6),  Δv(7),  Δv(8));
+    Wb += Vector3(Δv(9),  Δv(10), Δv(11));
 
-    A->m_body->v = Va;  A->m_body->ang_v = Wa;
-    B->m_body->v = Vb;  B->m_body->ang_v = Wb;
+    A->v     = Va;
+    A->ang_v = Wa;
+    B->v     = Vb;
+    B->ang_v = Wb;
+
+    // 6) debug logging
+    std::cout 
+      << "[Contact " << this 
+      << " | iter "    << iter 
+      << "] JV="       << JV 
+      << ", bias="    << baum
+      << ", rest="    << rest 
+      << ", rawΛ="    << rawLambda 
+      << ", dΛ="      << dLambda 
+      << ", sum="     << newSum << "\n";
+    std::cout << "  Va: "; Va.printV();
+    std::cout << "  Vb: "; Vb.printV();
 
     return dLambda;
 }
-
-
-
-
-// ! This one does not work.
-// float ContactConstraint::solveConstraint(float time){
-    
-//     if (std::abs(effectiveMass) < 1e-6f) {
-//         return 0.0f; // Skip this constraint
-//     }
-
-//     std::cout << "pen dep : " << contactData->penetrationDepth << '\n';
-
-//     const float penetrationThreshold = 1e-4f;
-//     if(contactData->penetrationDepth <= penetrationThreshold ||
-//        (fabs(contactData->contactNormal.getX()) < 1e-6f &&
-//         fabs(contactData->contactNormal.getY()) < 1e-6f &&
-//         fabs(contactData->contactNormal.getZ()) < 1e-6f))
-//     {
-//         return 0.0f;
-//     }
-
-//     Collider* collA = colliderA;
-//     Collider* collB = colliderB;
-
-//     Vector3 Va = collA->m_body->getVelocity();
-//     Vector3 Wa = collA->m_body->getAngularVelocity();
-//     Vector3 Vb = collB->m_body->getVelocity();
-//     Vector3 Wb = collB->m_body->getAngularVelocity();
-
-//     Vector3 ra = contactData->worldContactPointA - colliderA->m_body->getPosition();
-//     Vector3 rb = contactData->worldContactPointB - colliderB->m_body->getPosition();
-
-//     Vector3 vDelta = Vb + Wb.cross(rb) - Va - Wa.cross(ra);
-//     float dotDN = vDelta.dot(contactData->contactNormal);
-
-//     float biasImpulse = 0.f;
-//     if (contactData->penetrationDepth > 0.005f) //slop = 0.005
-//         biasImpulse = (0.1f / time) * std::max(0.f, contactData->penetrationDepth - 0.005f);
-//     float b = biasImpulse;
-
-//     std::cout << "EffectiveMass: " << effectiveMass << ", biasImpulse: " << biasImpulse << "\n";
-
-
-//     float lambda = -(dotDN - b) / effectiveMass;
-//     float newImpulse = std::max(contactData->normalImpulseSum + lambda, 0.0f);
-//     lambda = newImpulse - contactData->normalImpulseSum;
-//     // contactData->normalImpulseSum += newImpulse;
-//     contactData->normalImpulseSum = newImpulse;
-
-//     Eigen::Matrix<float, 12, 1> delta_V = Minv_Jtr * lambda; // Catto_A
-
-//     Va = Va - Vector3(delta_V(0, 0), delta_V(1, 0), delta_V(2, 0));
-//     Wa = Wa - Vector3(delta_V(3, 0), delta_V(4, 0), delta_V(5, 0));
-//     Vb = Vb + Vector3(delta_V(6, 0), delta_V(7, 0), delta_V(8, 0));
-//     Wb = Wb + Vector3(delta_V(9, 0), delta_V(10, 0), delta_V(11, 0));
-
-//     collA->m_body->v = Va;
-//     collA->m_body->ang_v = Wa;
-//     collB->m_body->v = Vb;
-//     collB->m_body->ang_v = Wb;
-
-//     return lambda;
-// }

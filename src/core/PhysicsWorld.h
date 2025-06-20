@@ -63,156 +63,118 @@ public:
     // }
 
     // ! No problem in broadphase(might me small prblms) and gjk epa, manifolds and constraint solving does have problem 
-    void simulate(){
-        using Clock = std::chrono::high_resolution_clock;
-        auto totalStart = Clock::now();
-
-        // Integrate forces for all rigid bodies
-        // for( RigidBody& rbody : rigidBodies ){
-        //     // rbody->integratePhysics(dt);
-        //     rbody->applyForce(); // if any
-        // }
-
-        // Broadphase Collision Detection using AABBTree
-        // for( RigidBody& rbody : rigidBodies ){
-        
-        auto start = Clock::now();
-        // broadphase.ClearTree();
-        // for( std::shared_ptr<RigidBody>& rbody : rigidBodies ){
-        //     broadphase.Add( &(colliderMap[rbody]->m_aabb) );
-        // }
-
+    void simulate() {
+        // 1) Broadphase
         broadphase.Update();
+        auto& pairs = broadphase.ComputeCollidingPairs();
 
-        ColliderPairList& collidingPairs = broadphase.ComputeCollidingPairs();
+        // 2) Prune stale manifold contacts before detecting new ones
+        for (auto& kv : manifolds) {
+            kv.second.updateManifold();
+        }
 
-        // for( auto& [cola, colb] : collidingPairs ) {
-        //     std::cout << cola->m_body->m_name << " " << colb->m_body->m_name << '\n'; 
-        // }
-
-        auto end = Clock::now();
-        // std::cout << "Broadphase: " 
-        //         << std::chrono::duration<double, std::milli>(end - start).count() 
-        //         << " ms\n";
-
-
-        start = Clock::now();
-        // Narrowphase Collision Detection on colliding pairs
-        for( auto& colPair : collidingPairs ){
-            Collider* colliderA = colPair.first;
-            Collider* colliderB = colPair.second;
+        // 3) Build contact constraints for _all_ colliding pairs
+        constraints.clear();
+        for (auto& pr : pairs) {
+            Collider* A = pr.first;
+            Collider* B = pr.second;
 
             Simplex simplex;
+            if (!gjk.isIntersecting(simplex, *A, *B)) continue;
 
-            // GJK for narrowphase collision detection  
-            bool isColliding = gjk.isIntersecting(simplex, *colliderA, *colliderB);
-            // bool isColliding = false;
+            ContactData cd = epa.RunEPA(simplex, *A, *B);
+            if (cd.penetrationDepth < 1e-4f) continue;
 
-            // std::cout << "simplex : "; simplex.printSimplex();
+
+            // ——— PRECOMPUTE BIAS & RESTITUTION ONCE PER FRAME ———
+            // 1) relative normal velocity JV0 at the contact
+            Vector3 n  = cd.contactNormal;
+            Vector3 Va = A->m_body->v,  Wa = A->m_body->ang_v;
+            Vector3 Vb = B->m_body->v,  Wb = B->m_body->ang_v;
+            Vector3 ra = cd.worldContactPointA - A->m_body->getPosition();
+            Vector3 rb = cd.worldContactPointB - B->m_body->getPosition();
+            float JV0 = (Vb + Wb.cross(rb) - Va - Wa.cross(ra)).dot(n);
+
+            // 2) Baumgarte bias (only correct penetration beyond a small slop)
+            const float beta = 0.2f;
+            const float slop = 0.001f;
+            float pen   = cd.penetrationDepth;
+            float depth = std::max(0.0f, pen - slop);
+            cd.biasTerm = -(beta / dt) * depth;
+
+            // 3) Restitution (only if bodies are closing in)
+            const float e = 0.1f;
+            cd.restitutionTerm = (JV0 < 0.0f) ? (-e * JV0) : 0.0f;
+
+
+            auto key = std::make_pair(A, B);
+            auto it  = manifolds.find(key);
+            if (it == manifolds.end())
+                it = manifolds.emplace(key, Manifold(A,B)).first;
+            Manifold& m = it->second;
+
+            // Add or update the persistent contact; get its pointer
+            ContactData* persistent = m.addContactPoint(cd);
+
+
+            std::cout << "Creating ContactConstraint between A=" << A << " and B=" << B; 
+            std::cout << " at point A = "; cd.worldContactPointA.printV(); 
+            std::cout << ", point B = "; cd.worldContactPointB.printV(); 
+            std::cout << ", normal = "; cd.contactNormal.printV(); 
+            std::cout << ", pen = " << cd.penetrationDepth << '\n';
+            std::cout << "Pushing constraint #" << constraints.size() + 1 << " for A=" << A << ", B=" << B << "\n";
+            std::cout << "Total contact constraints this frame: " << constraints.size() << "\n\n";
+
+
+
+            // Create a solver constraint pointing into that persistent data
+            auto c = std::make_unique<ContactConstraint>(A, B, persistent);
+            constraints.push_back(std::move(c));
+        }
+
+        // 4) Warm‑start: re‑apply each contact’s stored normal impulse
+        for (auto& c : constraints) {
+            c->calcJacobian();
+            float λ0 = c->contactData->normalImpulseSum;
+            Eigen::Matrix<float,12,1> dV = c->Minv_Jtr * λ0;
             
-            // std::cout << "----------" << isColliding << "-----------" << '\n';
+            auto bodyA = c->colliderA->m_body.get();
+            auto bodyB = c->colliderB->m_body.get();
+            
+            bodyA->v     += Vector3(dV(0), dV(1), dV(2));
+            bodyA->ang_v += Vector3(dV(3), dV(4), dV(5));
+            bodyB->v     += Vector3(dV(6), dV(7), dV(8));
+            bodyB->ang_v += Vector3(dV(9), dV(10),dV(11));
+            
+            // c->contactData->normalImpulseSum = 0.0f;
+        }
 
-            // colliderA->m_body->getPosition().printV();
-            // colliderB->m_body->getPosition().printV();
-            if( isColliding ){ // if colliding ===> use EPA to generate contact point
-                // simplex.printSimplex();
-
-                ContactData contact = epa.RunEPA(simplex, *colliderA, *colliderB);
-
-                if(contact.penetrationDepth < 0.0001f) continue;
-                std::cout << "Contact Normal: "; contact.contactNormal.printV();
-                std::cout << "Penetration Depth: " << contact.penetrationDepth << "\n";
-
-
-                auto manifoldKey = std::make_pair(colliderA, colliderB);
-                if( manifolds.find(manifoldKey) == manifolds.end() ) {
-                    manifolds[manifoldKey] = Manifold(colliderA, colliderB);
-                    // manifolds.emplace(manifoldKey, colliderA, colliderB);
-
-                    // manifolds[manifoldKey].addContactPoint(contact);
-                }
-                else {
-                    manifolds[manifoldKey].updateManifold();
-                    manifolds[manifoldKey].addContactPoint(contact);
-                }
-
-                Manifold& manifold = manifolds[manifoldKey];
-
-                manifold.updateManifold();
-                manifold.addContactPoint(contact);
-
-                // Create ContactConstraints for all collisions
-                auto constraint = std::make_unique<ContactConstraint>(colliderA, colliderB);
-                // constraint->contactData = &contact;
-                constraint->contactData = std::make_unique<ContactData>(contact);
-
-                constraint->calcJacobian();
-
-                constraints.push_back(std::move(constraint));
+        // 5) Sequential‑impulse solve (Gauss–Seidel style)
+        const int solverIters = 16;
+        for (int iter = 0; iter < solverIters; ++iter) {
+            for (auto& c : constraints) {
+                // c->calcJacobian();
+                c->solveConstraint(dt, iter);
             }
         }
-        end = Clock::now();
-        // std::cout << "Narrowphase (GJK + EPA): " 
-        //           << std::chrono::duration<double, std::milli>(end - start).count() 
-        //           << " ms\n";
 
-        // Collision Resolution ===> i.e. solve constraints
-        // std:: cout << "len : " << constraints.size() << "\n";
-        for( auto& constraint : constraints ) {
-            // constraint->contactData->contactNormal.printV();
-            constraint->calcJacobian();
-            constraint->solveConstraint(dt);
+        // 6) Integrate velocities & positions
+        for (auto& rbptr : rigidBodies) {
+            RigidBody* rb = rbptr.get();
+            // apply gravity
+            if (colliderMap[rbptr]->m_colliderType == Collider::ColliderType::DYNAMIC)
+                rb->applyForce(gravity * rb->mass, rb->getPosition());
+            rb->integratePhysics(dt);
         }
-        constraints.clear();
 
-        // for (int i = 0; i < 10; ++i) {
-        //     for (auto& constraint : constraints) {
-        //         constraint->solveConstraint(dt);
-        //     }
-        // }
-        // constraints.clear();
-
-        start = Clock::now();
-        // Velocity integration 
-        // for( auto& rbody : rigidBodies ) {
-        //     if (rbody->mass > 0.0f) { // Only apply to dynamic bodies
-        //         rbody->applyForce(gravity * rbody->mass, Vector3(0,0,0));
-        //     }
-
-        //     rbody->integratePhysics(dt);
-            
-        //     // std::cout << "pos out :"; rbody->pos.printV();
-        // }
-        for( std::shared_ptr<RigidBody>& rbody : rigidBodies ) {
-            if (colliderMap[rbody]->m_colliderType == Collider::ColliderType::DYNAMIC) { // Only apply to dynamic bodies
-                rbody->applyForce(gravity * rbody->mass, rbody->getPosition());
-            }
-
-            rbody->integratePhysics(dt);
-            
-            // std::cout << "pos out :"; rbody->pos.printV();
+        // 7) Submit to renderer
+        for (auto& rbptr : rigidBodies) {
+            renderer->submitMesh(
+                *(colliderMap[rbptr]->m_shape->mesh),
+                rbptr->getTransformMatrix().toGlm()
+            );
         }
-        end = Clock::now();
-        // std::cout << "Velocity Integration: " 
-        //         << std::chrono::duration<double, std::milli>(end - start).count() 
-        //         << " ms\n";
-
-        start = Clock::now();
-        for( std::shared_ptr<RigidBody>& rbody : rigidBodies ) {
-            
-            renderer->submitMesh(*(colliderMap[rbody]->m_shape->mesh), rbody->getTransformMatrix().toGlm());
-            // colliderMap[rbody]->m_shape->mesh->drawWireframe();
-        }
-        end = Clock::now();
-        // std::cout << "Rendering Submission: " 
-        //         << std::chrono::duration<double, std::milli>(end - start).count() 
-        //         << " ms\n";
-
-
-        auto totalEnd = Clock::now();
-        // std::cout << "Total Simulation Time: " 
-        //             << std::chrono::duration<double, std::milli>(totalEnd - totalStart).count() 
-        //             << " ms\n";
     }
+
 };
 

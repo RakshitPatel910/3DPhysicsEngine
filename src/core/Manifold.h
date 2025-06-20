@@ -24,59 +24,94 @@ public:
 
     Manifold(Collider* colliderA, Collider* colliderB) : colliderA(colliderA), colliderB(colliderB) {}
 
+    // void updateManifold() {
+    //     // identify persistent points
+    //     for( ContactData& contact : persistentContacts ) {
+    //         const Vector3 rAB = contact.worldContactPointA - contact.worldContactPointB;
+    //         const Vector3 rA = contact.localContactPointA - contact.worldContactPointA;
+    //         const Vector3 rB = contact.localContactPointB - contact.worldContactPointB;
+
+    //         const bool isPenetrating = contact.contactNormal.dot(rAB) <= 0.0f;
+
+    //         const bool closeEnoughrA = rA.lengthSq() < persistent_threshold;
+    //         const bool closeEnoughrB = rB.lengthSq() < persistent_threshold;
+
+    //         // if( closeEnoughA && closeEnoughB ) {
+    //         //     contact.isPersistent = true;
+    //         // }
+    //         // else {
+    //         //     // Remove contact from Manifold
+    //         // }
+
+    //         contact.isPersistent = isPenetrating && closeEnoughrA && closeEnoughrB;
+    //     }
+
+    //     // remove non persistent points
+    //     persistentContacts.erase(
+    //         std::remove_if( 
+    //             persistentContacts.begin(), 
+    //             persistentContacts.end(), 
+    //             [](const ContactData& contact){
+    //                 return !contact.isPersistent;
+    //             }
+    //         ),
+    //         persistentContacts.end()
+    //     );
+
+    // }
+    // 1) Prune contacts that weren’t re‑marked persistent last frame
     void updateManifold() {
-        // identify persistent points
-        for( ContactData& contact : persistentContacts ) {
-            const Vector3 rAB = contact.worldContactPointA - contact.worldContactPointB;
-            const Vector3 rA = contact.localContactPointA - contact.worldContactPointA;
-            const Vector3 rB = contact.localContactPointB - contact.worldContactPointB;
-
-            const bool isPenetrating = contact.contactNormal.dot(rAB) <= 0.0f;
-
-            const bool closeEnoughrA = rA.lengthSq() < persistent_threshold;
-            const bool closeEnoughrB = rB.lengthSq() < persistent_threshold;
-
-            // if( closeEnoughA && closeEnoughB ) {
-            //     contact.isPersistent = true;
-            // }
-            // else {
-            //     // Remove contact from Manifold
-            // }
-
-            contact.isPersistent = isPenetrating && closeEnoughrA && closeEnoughrB;
+        for (auto& c : persistentContacts) {
+            // clear the flag; addContactPoint will re‑set it
+            c.isPersistent = false;
         }
-
-        // remove non persistent points
         persistentContacts.erase(
-            std::remove_if( 
-                persistentContacts.begin(), 
-                persistentContacts.end(), 
-                [](const ContactData& contact){
-                    return !contact.isPersistent;
-                }
+            std::remove_if(
+                persistentContacts.begin(),
+                persistentContacts.end(),
+                [](const ContactData& c){ return !c.isPersistent; }
             ),
             persistentContacts.end()
         );
-
     }
 
-    void addContactPoint(const ContactData& newContact){
+    // void addContactPoint(const ContactData& newContact){
+    ContactData* addContactPoint(const ContactData& newContact){
         // proximity check for newPoint with existing manifold
-        for( ContactData& contact : persistentContacts ) {
+        for( auto& contact : persistentContacts ) {
             const Vector3 rA = newContact.worldContactPointA - contact.worldContactPointA;
             const Vector3 rB = newContact.worldContactPointB - contact.worldContactPointB;
 
             const bool farEnoughrA = rA.lengthSq() > persistent_threshold;
             const bool farEnoughrB = rB.lengthSq() > persistent_threshold;
 
-            if( !farEnoughrA && !farEnoughrB ) {
-                // persistentContacts.push_back( newContact );
-                return;
+            // if( !farEnoughrA && !farEnoughrB ) {
+            //     // persistentContacts.push_back( newContact );
+            //     return;
+            // }
+            if (!farEnoughrA && !farEnoughrB) {
+                // update the *geometry* fields, preserve impulse sums
+                contact.worldContactPointA   = newContact.worldContactPointA;
+                contact.worldContactPointB   = newContact.worldContactPointB;
+                contact.localContactPointA   = newContact.localContactPointA;
+                contact.localContactPointB   = newContact.localContactPointB;
+                contact.contactNormal        = newContact.contactNormal;
+                contact.contactTangent1      = newContact.contactTangent1;
+                contact.contactTangent2      = newContact.contactTangent2;
+                contact.penetrationDepth     = newContact.penetrationDepth;
+                contact.isPersistent         = true;
+                return &contact;
             }
         }
 
+        // persistentContacts.push_back( newContact );
+        // 2) not found: add it fresh (impulse sums start at zero via ctor)
         persistentContacts.push_back( newContact );
-        
+        ContactData* added = &persistentContacts.back();
+        added->isPersistent = true;
+
+        std::cout << "[Manifold] Created new ContactData at " << added << "\n";
+
         if( persistentContacts.size() > 4 ) {
             // find deepest penetrating contact point ===> [ 1st point of manifold ]
             ContactData* deepestPoint = nullptr;
@@ -141,6 +176,8 @@ public:
                 persistentContacts.push_back(*furthest3);
             }
         }
+
+        return added;
     }
 
 private:

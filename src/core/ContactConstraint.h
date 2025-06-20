@@ -10,14 +10,16 @@
 class ContactConstraint : public Constraint
 {
 public:
-    // ContactData* contactData;
-    std::unique_ptr<ContactData> contactData;
+    ContactData* contactData;
+    // std::unique_ptr<ContactData> contactData;
 
-    ContactConstraint(Collider* colliderA, Collider* colliderB) : Constraint(colliderA, colliderB) {}
+    ContactConstraint(Collider* colliderA, Collider* colliderB, ContactData* cd) : Constraint(colliderA, colliderB), contactData(cd) {}
+    // ContactConstraint(Collider* colliderA, Collider* colliderB) : Constraint(colliderA, colliderB) {}
 
     virtual void calcJacobian() override;
     virtual float solveConstraint(
-        float time
+        float time,
+        int iter
         // std::shared_ptr<ContactData> contact
     ) override;
 };

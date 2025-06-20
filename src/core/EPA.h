@@ -54,9 +54,13 @@ struct ContactData
 
     float penetrationDepth;
 
-    float normalImpulseSum;
-    float tangent1ImpulseSum;
-    float tangent2ImpulseSum;
+    float normalImpulseSum   = 0.0f;
+    float tangent1ImpulseSum = 0.0f;
+    float tangent2ImpulseSum = 0.0f;
+
+    // precomputed per time‑step
+    float biasTerm        = 0.0f;
+    float restitutionTerm = 0.0f;
 
     bool isPersistent;
 
